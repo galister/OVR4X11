@@ -13,7 +13,7 @@ namespace Modules
         private const string ActionSet = "default";
         private const string ShowHideAction = "ShowHide";
         
-        [SerializeField] public Camera hmd;
+        [SerializeField] public Transform hmd;
 
         [SerializeField] public Transform spawn;
 

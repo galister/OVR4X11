@@ -17,7 +17,7 @@ namespace EasyOverlay
         public override void Show()
         {
             transform.position = manager.spawn.TransformPoint(referencePoint);
-            transform.LookAt(manager.hmd.transform);
+            transform.LookAt(manager.hmd);
 
             base.Show();
         }
@@ -35,7 +35,7 @@ namespace EasyOverlay
             base.LateUpdate();
             
             if (grabbed)
-                transform.LookAt(manager.hmd.transform);
+                transform.LookAt(manager.hmd);
         }
 
         protected override void OnDropped(PointerHit pointer)

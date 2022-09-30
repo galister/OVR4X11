@@ -114,7 +114,7 @@ namespace Modules
         private PointerModifier RecalculateModifier()
         {
             var t = transform;
-            var toEye = manager.hmd.transform.position - t.position;
+            var toEye = manager.hmd.position - t.position;
             var dot = Vector3.Dot(toEye, t.up);
             return dot switch
             {

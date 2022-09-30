@@ -95,7 +95,7 @@ namespace EasyOverlay
             
             overlay.SetOverlayWidthInMeters(handle, width);
             
-            var dot = Vector3.Dot(transform.forward, (manager.hmd.transform.position - transform.position).normalized);
+            var dot = Vector3.Dot(transform.forward, (manager.hmd.position - transform.position).normalized);
             var t = new SteamVR_Utils.RigidTransform(transform);
             if (dot > 0f)
             {
