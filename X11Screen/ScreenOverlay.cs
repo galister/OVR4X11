@@ -30,24 +30,6 @@ namespace EasyOverlay.X11Screen
 
             base.OnEnable();
 
-            // TODO: vertical screens?
-            // mask = new VROverlayIntersectionMaskPrimitive_t
-            // {
-            //     m_nPrimitiveType = EVROverlayIntersectionMaskPrimitiveType.OverlayIntersectionPrimitiveType_Rectangle,
-            //     m_Primitive = new VROverlayIntersectionMaskPrimitive_Data_t
-            //     {
-            //         m_Rectangle = new IntersectionMaskRectangle_t
-            //         {
-            //             m_flHeight = cap.size.y,
-            //             m_flWidth = cap.size.x,
-            //             m_flTopLeftX = 0,
-            //             m_flTopLeftY = deadPixelsY
-            //         }
-            //     }
-            // };
-            //
-            // maskSize = sizeof(EVROverlayIntersectionMaskPrimitiveType) + 4 * sizeof(float);
-
             if (Application.isEditor)
                 GenerateMesh();
         }

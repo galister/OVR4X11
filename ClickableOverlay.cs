@@ -1,3 +1,5 @@
+#define DEBUG_LOG
+
 using Modules;
 using UnityEngine;
 using Valve.VR;
@@ -164,11 +166,17 @@ namespace EasyOverlay
                 else
                     primaryPointer = null;
                 
+#if DEBUG_LOG
+                Debug.Log($"OnLeft {h}, primary");
+#endif
                 OnLeft(h, true);
             }
             else if (secondaryPointer?.device == h)
             {
                 secondaryPointer = null;
+#if DEBUG_LOG
+                Debug.Log($"OnLeft {h}, non-primary");
+#endif
                 OnLeft(h, false);
             }
         }
@@ -178,8 +186,16 @@ namespace EasyOverlay
             if (grabState != null && grabState.DifferentTypeFrom(p))
             {
                 grabState.UpdateFrom(p);
+                
+#if DEBUG_LOG
+                Debug.Log($"OnDropped {grabState}");
+#endif
                 OnDropped(grabState);
             }
+
+#if DEBUG_LOG
+            Debug.Log($"OnGrabbed {p}");
+#endif
             OnGrabbed(p);
             grabState = p;
         }
@@ -189,6 +205,9 @@ namespace EasyOverlay
             if (grabState == null) return;
             
             grabState.UpdateFrom(p);
+#if DEBUG_LOG
+            Debug.Log($"OnDropped {grabState}");
+#endif
             OnDropped(grabState);
 
             grabState = null;
@@ -199,10 +218,15 @@ namespace EasyOverlay
             if (clickState != null && clickState.DifferentTypeFrom(p))
             {
                 clickState.UpdateFrom(p);
-                
+#if DEBUG_LOG
+                Debug.Log($"OnReleased {clickState}");
+#endif
                 OnReleased(clickState);
             }
 
+#if DEBUG_LOG
+            Debug.Log($"OnPressed {p}");
+#endif
             OnPressed(p);
             clickState = p;
         }
@@ -213,6 +237,9 @@ namespace EasyOverlay
             
             clickState.UpdateFrom(p);
                 
+#if DEBUG_LOG
+            Debug.Log($"OnReleased {clickState}");
+#endif
             OnReleased(clickState);
 
             clickState = null;
@@ -308,6 +335,11 @@ namespace EasyOverlay
         public bool DifferentTypeFrom(PointerHit p)
         {
             return device != p.device || modifier != p.modifier;
+        }
+
+        public override string ToString()
+        {
+            return $"{device} on {overlay.gameObject.name} at {texUv}";
         }
     }
 }

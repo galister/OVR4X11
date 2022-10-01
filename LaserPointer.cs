@@ -18,7 +18,8 @@ namespace Modules
         [SerializeField] 
         public BaseOverlay cursor;
         
-        private const float MaxLength = 10f;
+        private const float MaxLength = 5f;
+        private float length;
 
         private readonly Color leftClickColor = new(0x00, 0x60, 0x80, 0x80);
         private readonly Color rightClickColor = new(0x00, 0x60, 0x80, 0x80);
@@ -31,7 +32,8 @@ namespace Modules
         public PointerModifier modifier;
         private bool wasIntersectedThisFrame = false;
 
-        private Transform childTransform;
+        private Transform refPoint1;
+        private Transform refPoint2;
 
         protected override void Start()
         {
@@ -42,18 +44,29 @@ namespace Modules
 
             var go = new GameObject
             {
+                name = "RefPoint1",
                 transform =
                 {
                     parent = transform,
-                    localPosition = Vector3.zero,
-                    localRotation = Quaternion.identity,
-                    localScale = Vector3.one
+                    localPosition = new Vector3(0, 0, MaxLength / 2),
+                    localEulerAngles = new Vector3(90, 0, 0)
                 }
             };
-            childTransform = go.transform;
+            refPoint1 = go.transform;
+
+            var go2 = new GameObject
+            {
+                name = "RefPoint2",
+                transform =
+                {
+                    parent = refPoint1,
+                    localPosition = Vector3.zero
+                }
+            };
+            refPoint2 = go2.transform;
 
             // R16G16B16_SFloat is known to work on OpenGL Linux
-            texture = new RenderTexture(16, 16, 0, GraphicsFormat.R16G16B16_SFloat, 0);
+            texture = new RenderTexture(1, (int)(MaxLength/width), 0, GraphicsFormat.R16G16B16_SFloat, 0);
             
             if (Application.isEditor)
             {   
@@ -96,13 +109,15 @@ namespace Modules
                 Show();
 
             // forward is backwards for some reason
-            childTransform.localPosition = new Vector3(0, 0, len / 2f);
-            childTransform.localScale = new Vector3(1, 1, len / width);
-            childTransform.LookAt(manager.hmd);
-            
-            // rotate Z towards hmd0
-            var euler = childTransform.localEulerAngles;
-            childTransform.localEulerAngles = new Vector3(0, 0, euler.z);
+            var dirToHmd = (refPoint2.transform.position - manager.hmd.position).normalized;
+            refPoint2.rotation = Quaternion.LookRotation(dirToHmd, refPoint2.parent.up);
+
+            // rotate Z towards hmd
+            var euler = refPoint2.localEulerAngles;
+            refPoint2.localEulerAngles = new Vector3(0, euler.y, 0);
+
+            length = len;
+            refPoint1.localPosition = new Vector3(0, 0, length / 2);
             
             // set cursor
             var cursorT = cursor.transform;
@@ -137,30 +152,26 @@ namespace Modules
             }
 
             wasIntersectedThisFrame = false;
-            
+
             if (handle == OpenVR.k_ulOverlayHandleInvalid || !visible)
                 return false;
-            
-            overlay.SetOverlayWidthInMeters(handle, width);
 
-            var m = Matrix4x4.TRS(childTransform.position, childTransform.rotation, childTransform.lossyScale);
-            var pose = new HmdMatrix34_t
-            {
-                m0 = m[0, 0],
-                m1 = m[0, 1],
-                m2 = -m[0, 2],
-                m3 = m[0, 3],
-                m4 = m[1, 0],
-                m5 = m[1, 1],
-                m6 = -m[1, 2],
-                m7 = m[1, 3],
-                m8 = -m[2, 0],
-                m9 = -m[2, 1],
-                m10 = m[2, 2],
-                m11 = -m[2, 3]
-            };
+            overlay.SetOverlaySortOrder(handle, 0xFFFFU);
+            overlay.SetOverlayWidthInMeters(handle, width);
             
-            overlay.SetOverlayTransformAbsolute(handle, SteamVR.settings.trackingSpace, ref pose);
+            var t = new SteamVR_Utils.RigidTransform(refPoint2);
+            var matrix = t.ToHmdMatrix34();
+            overlay.SetOverlayTransformAbsolute(handle, SteamVR.settings.trackingSpace, ref matrix);
+
+            var bounds = new VRTextureBounds_t
+            {
+                uMin = 0,
+                uMax = 1,
+                vMin = 0,
+                vMax = length / MaxLength
+            };
+
+            overlay.SetOverlayTextureBounds(handle, ref bounds);
 
             UploadTexture();
             return true;
