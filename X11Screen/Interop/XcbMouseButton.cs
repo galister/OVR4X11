@@ -2,8 +2,9 @@ namespace EasyOverlay.X11Screen.Interop
 {
     public enum XcbMouseButton : byte
     {
-        Left = 0,
-        Right = 1,
-        Middle = 2
+        None = 0,
+        Left = 1,
+        Right = 2,
+        Middle = 3
     }
 }

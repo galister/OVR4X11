@@ -20,6 +20,7 @@ namespace Modules
         
         private const float MaxLength = 5f;
         private float length;
+        private Color color;
 
         private readonly Color leftClickColor = new(0x00, 0x60, 0x80, 0x80);
         private readonly Color rightClickColor = new(0x00, 0x60, 0x80, 0x80);
@@ -66,7 +67,12 @@ namespace Modules
             refPoint2 = go2.transform;
 
             // R16G16B16_SFloat is known to work on OpenGL Linux
-            texture = new RenderTexture(1, (int)(MaxLength/width), 0, GraphicsFormat.R16G16B16_SFloat, 0);
+            var rt = new RenderTexture(1, (int)(MaxLength/width), 0, GraphicsFormat.R16G16B16_SFloat, 0);
+            RenderTexture.active = rt;
+            GL.Clear(false, true, Color.white);
+            RenderTexture.active = null;
+
+            texture = rt;
             
             if (Application.isEditor)
             {   
@@ -126,7 +132,7 @@ namespace Modules
             if (!cursor.visible)
                 cursor.Show();
 
-            var pointerColor = modifier switch
+            color = modifier switch
             {
                 PointerModifier.None when primary => leftClickColor,
                 PointerModifier.RightClick when primary => rightClickColor,
@@ -135,8 +141,6 @@ namespace Modules
                 PointerModifier.MiddleClick when !primary => middleClickColorDiminished,
                 _ => leftClickColorDiminished
             };
-            
-            SetColor(pointerColor);
         }
 
         // Runs after waitForEndOfFrame
@@ -171,6 +175,8 @@ namespace Modules
 
             overlay.SetOverlayTextureBounds(handle, ref bounds);
 
+            overlay.SetOverlayColor(handle, color.r, color.g, color.b);
+
             UploadTexture();
             return true;
         }
@@ -191,8 +197,8 @@ namespace Modules
             var dot = Vector3.Dot(toEye, t.up);
             return dot switch
             {
-                > 0.7f => PointerModifier.MiddleClick, // backhand towards face
-                < -0.7f => PointerModifier.RightClick, // palm towards face
+                > 0.5f => PointerModifier.MiddleClick, // backhand towards face
+                < -0.5f => PointerModifier.RightClick, // palm towards face
                 _ => PointerModifier.None // anything in between
             };
         }

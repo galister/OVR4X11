@@ -75,13 +75,15 @@ namespace EasyOverlay.X11Screen
                 _ => XcbMouseButton.Left
             };
 
-            cap?.SendMouse(pointer.texUv, click, pressed, 0); // TODO keyboard modifiers
+            cap?.SendMouse(pointer.texUv, click, pressed);
         }
 
         protected override bool OnScroll(PointerHit pointer, float value)
         {
-
-            return true;
+            if (base.OnScroll(pointer, value))
+                return true;
+            
+            return false; //TODO
         }
 
         public override bool Render()

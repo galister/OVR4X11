@@ -102,8 +102,6 @@ namespace EasyOverlay
                     if (!click && !grab)
                         PointerIdle(pointer);
 
-                    if (h != TrackedDevice.RightHand) continue;
-                    
                     var scroll = SteamVR_Input.GetVector2(ActionSet, ScrollAction, hInput, true);
                     if (Mathf.Abs(scroll.y) > 0.1f)
                         OnScroll(pointer, scroll.y);
@@ -221,8 +219,11 @@ namespace EasyOverlay
             if (clickState != null)
             {
                 if (clickState.device == p.device)
+                {
+                    OnMove(p, true);
                     return; // held
-                
+                }
+
                 clickState.UpdateFrom(p);
 #if DEBUG_LOG
                 Debug.Log($"OnReleased {clickState}");

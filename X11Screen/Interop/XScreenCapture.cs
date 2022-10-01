@@ -17,7 +17,7 @@ namespace EasyOverlay.X11Screen.Interop
 
         public XScreenCapture(int screen)
         {
-            size = XScreenCapture.GetScreenSize(screen);
+            size = GetScreenSize(screen);
             if (size.magnitude < 1)
                 return;
 
@@ -76,29 +76,29 @@ namespace EasyOverlay.X11Screen.Interop
             xshm_mouse_move(xShmHandle, to.x, to.y);
         }
 
-        public void SendMouse(Vector2 uv, XcbMouseButton button, bool pressed, XcbModifier modifiers)
+        public void SendMouse(Vector2 uv, XcbMouseButton button, bool pressed)
         {
             if (xShmHandle == IntPtr.Zero)
                 return;
             
             var to = MouseCoordinatesFromUv(uv);
-            xshm_mouse_event(xShmHandle, to.x, to.y, (byte) button, pressed ? 1UL : 0UL, (ushort) modifiers);
+            Debug.Log($"Mouse: {button} {(pressed ? "down" : "up")} at {to}");
+            xshm_mouse_event(xShmHandle, to.x, to.y, (byte) button, pressed ? 1 : 0);
         }
 
-        public void SendKey(KeyCode keyCode, bool pressed, XcbModifier modifiers)
+        public void SendKey(KeyCode keyCode, bool pressed)
         {
             if (xShmHandle == IntPtr.Zero)
                 return;
             
-            xshm_keybd_event(xShmHandle, (byte) keyCode, pressed ? 1UL : 0UL, (ushort) modifiers);
+            xshm_keybd_event(xShmHandle, (byte) keyCode, pressed ? 1 : 0);
         }
         
         public Vector2Int GetMousePosition()
         {
-            var bigNumber = xshm_mouse_position(xShmHandle);
-            var w = (int)(bigNumber >> 32);
-            var h = (int)(bigNumber & 0xFFFFFFFF);
-            return new Vector2Int(w, h);
+            var vec = new Vector2Int();
+            xshm_mouse_position(xShmHandle, ref vec);
+            return vec;
         }
 
         public static Int32 NumScreens()
@@ -115,11 +115,10 @@ namespace EasyOverlay.X11Screen.Interop
 
         public static Vector2Int GetScreenSize(int screen)
         {
-            var bigNumber = xshm_screen_size(screen);
-            var w = (int)(bigNumber >> 32);
-            var h = (int)(bigNumber & 0xFFFFFFFF);
-            Debug.Log($"Screen {screen} is {w}x{h}.");
-            return new Vector2Int(w, h);
+            var vec = new Vector2Int();
+            xshm_screen_size(screen, ref vec);
+            Debug.Log($"Screen {screen} is {vec.x}x{vec.y}.");
+            return vec;
         }
 
         // ReSharper disable IdentifierTypo
@@ -135,10 +134,10 @@ namespace EasyOverlay.X11Screen.Interop
         private static extern Int32 xshm_num_screens();
         
         [DllImport("libxshm_cap.so")]
-        private static extern UInt64 xshm_screen_size(Int32 screen);
+        private static extern void xshm_screen_size(Int32 screen, ref Vector2Int vec);
         
         [DllImport("libxshm_cap.so")]
-        private static extern UInt64 xshm_mouse_position(IntPtr xhsm_instance);
+        private static extern void xshm_mouse_position(IntPtr xhsm_instance, ref Vector2Int vec);
 
         [DllImport("libxshm_cap.so")]
         private static extern IntPtr xshm_pixel_buffer(IntPtr xhsm_instance);
@@ -150,9 +149,9 @@ namespace EasyOverlay.X11Screen.Interop
         private static extern void xshm_mouse_move(IntPtr xhsm_instance, Int16 x, Int16 y);
 
         [DllImport("libxshm_cap.so")]
-        private static extern void xshm_mouse_event(IntPtr xhsm_instance, Int16 x, Int16 y, Byte button, UInt64 pressed, UInt16 modmask);
+        private static extern void xshm_mouse_event(IntPtr xhsm_instance, Int16 x, Int16 y, Byte button, Int32 pressed);
 
         [DllImport("libxshm_cap.so")]
-        private static extern void xshm_keybd_event(IntPtr xhsm_instance, Byte keycode, UInt64 pressed, UInt16 modmask);
+        private static extern void xshm_keybd_event(IntPtr xhsm_instance, Byte keycode, Int32 pressed);
     }
 }

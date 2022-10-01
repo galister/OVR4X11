@@ -25,6 +25,7 @@ namespace EasyOverlay
         }
 
         // TODO protected override void OnMove(PointerHit pointer, bool primary);
+        // What for?
 
         protected override bool OnGrabbed(PointerHit pointer)
         {
@@ -42,7 +43,19 @@ namespace EasyOverlay
             base.LateUpdate();
             
             if (grabbed)
-                transform.LookAt(manager.hmd);
+                LootAtHmd();
+        }
+
+        protected override bool OnScroll(PointerHit pointer, float value)
+        {
+            if (!grabbed) return false;
+
+            if (pointer.device == TrackedDevice.RightHand)
+                transform.localPosition += Vector3.forward * (Mathf.Pow(value, 3));
+            else
+                width = Mathf.Clamp(width - Mathf.Pow(value, 3), 0.1f, 5f);
+            
+            return true;
         }
 
         protected override bool OnDropped(PointerHit pointer)
