@@ -19,6 +19,16 @@ namespace EasyOverlay
 
         private PointerHit primaryPointer;
         private PointerHit secondaryPointer;
+        
+        public Vector2 activeRatio { get; private set; }
+        public Vector2 deadZone { get; private set; }
+
+        protected void SetDeadzone(Vector2Int pixels)
+        {
+            activeRatio = (Vector2)pixels / texture.width;
+            deadZone = activeRatio * 0.5f;
+            activeRatio = new Vector2(1 - activeRatio.x, 1 - activeRatio.y);
+        }
 
         protected abstract void OnMove(PointerHit pointer, bool primary);
         protected abstract void OnLeft(TrackedDevice device, bool primary);
@@ -64,9 +74,10 @@ namespace EasyOverlay
                 
                 if (overlay.ComputeOverlayIntersection(handle, ref intersectionParams, ref results))
                 {   // hit
-                    var pointer = new PointerHit(hand, ref results);
+                    if (IsInDeadZone(results))
+                        continue;
                     
-                    Debug.Log($"{h} pointer @ {gameObject.name} {pointer.uv}");
+                    var pointer = new PointerHit(this, hand, ref results);
                     
                     var click = SteamVR_Input.GetState(ActionSet, ClickAction, hInput, true);
                     if (click)
@@ -102,6 +113,13 @@ namespace EasyOverlay
                     PointerLeft(h);
                 }
             }
+        }
+
+        private bool IsInDeadZone(VROverlayIntersectionResults_t res)
+        {
+            var uv = res.vUVs;
+            return uv.v0 < deadZone.x || uv.v0 > 1 - deadZone.x 
+                || uv.v1 < deadZone.y || uv.v1 > 1 - deadZone.y;
         }
 
         protected virtual void PointerOnIntersected(PointerHit p, bool primary)
@@ -259,30 +277,32 @@ namespace EasyOverlay
     public class PointerHit
     {
         public LaserPointer laser;
+        public ClickableOverlay overlay;
         public TrackedDevice device;
         public float distance;
-        public Vector2 uv;
-        public Vector3 position;
-        public Vector3 normal;
+        public Vector2 texUv;
+        public Vector2 nativeUv;
         public PointerModifier modifier;
 
-        public PointerHit(LaserPointer las, ref VROverlayIntersectionResults_t result)
+        public PointerHit(ClickableOverlay screen, LaserPointer las, ref VROverlayIntersectionResults_t result)
         {
+            overlay = screen;
             laser = las;
             device = las.trackedDevice;
             distance = result.fDistance;
             modifier = las.modifier;
-            uv = new Vector2(result.vUVs.v0, result.vUVs.v1);
-            position = new Vector3(result.vPoint.v0, result.vPoint.v1, -result.vPoint.v2);
-            normal = new Vector3(result.vNormal.v0, result.vNormal.v1, -result.vNormal.v2);
+            texUv = new Vector2(
+                (result.vUVs.v0 - overlay.deadZone.x) / overlay.activeRatio.x,
+                (result.vUVs.v1 - overlay.deadZone.y) / overlay.activeRatio.y
+                );
+            nativeUv = new Vector2(result.vUVs.v0, result.vUVs.v1);
         }
 
         public void UpdateFrom(PointerHit p)
         {
             distance = p.distance;
-            normal = p.normal;
-            position = p.position;
-            uv = p.uv;
+            texUv = p.texUv;
+            nativeUv = p.nativeUv;
         }
 
         public bool DifferentTypeFrom(PointerHit p)

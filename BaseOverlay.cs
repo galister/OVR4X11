@@ -115,7 +115,7 @@ namespace EasyOverlay
         protected virtual void OnEnable()
         {
             if (String.IsNullOrWhiteSpace(key))
-                key = $"{Application.productName.ToLower().Replace(" ", "_")}/{gameObject.name.ToLower().Replace(" ", "_")}";
+                key = $"{Application.productName.Replace(" ", "_")}/{gameObject.name.Replace(" ", "_")}";
             
             if (handle != OpenVR.k_ulOverlayHandleInvalid)
             {

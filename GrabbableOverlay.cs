@@ -24,6 +24,7 @@ namespace EasyOverlay
 
         protected override void OnGrabbed(PointerHit pointer)
         {
+            return;
             transform.parent = manager.GetController(pointer.device).transform;
             grabbed = true;
         }
@@ -38,6 +39,7 @@ namespace EasyOverlay
 
         protected override void OnDropped(PointerHit pointer)
         {
+            return;
             var t = transform;
             grabbed = false;
 

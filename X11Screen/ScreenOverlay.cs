@@ -11,6 +11,9 @@ namespace EasyOverlay.X11Screen
         
         [SerializeField]
         public int screen;
+        
+        private VROverlayIntersectionMaskPrimitive_t mask;
+        private uint maskSize;
 
         protected override void LateUpdate()
         {
@@ -21,10 +24,29 @@ namespace EasyOverlay.X11Screen
         protected override void OnEnable()
         {
             cap = new XScreenCapture(screen);
-            if (texture == null)
-                texture = cap.texture;
+            texture = cap.texture;
+            
+            SetDeadzone(new Vector2Int(0, texture.width - texture.height)); 
 
             base.OnEnable();
+
+            // TODO: vertical screens?
+            // mask = new VROverlayIntersectionMaskPrimitive_t
+            // {
+            //     m_nPrimitiveType = EVROverlayIntersectionMaskPrimitiveType.OverlayIntersectionPrimitiveType_Rectangle,
+            //     m_Primitive = new VROverlayIntersectionMaskPrimitive_Data_t
+            //     {
+            //         m_Rectangle = new IntersectionMaskRectangle_t
+            //         {
+            //             m_flHeight = cap.size.y,
+            //             m_flWidth = cap.size.x,
+            //             m_flTopLeftX = 0,
+            //             m_flTopLeftY = deadPixelsY
+            //         }
+            //     }
+            // };
+            //
+            // maskSize = sizeof(EVROverlayIntersectionMaskPrimitiveType) + 4 * sizeof(float);
 
             if (Application.isEditor)
                 GenerateMesh();
@@ -34,13 +56,14 @@ namespace EasyOverlay.X11Screen
         {
             base.OnDisable();
             cap?.Dispose();
+            texture = null;
             cap = null;
         }
 
         protected override void OnMove(PointerHit pointer, bool primary)
         {
             if (primary) 
-                cap?.MoveMouse(pointer.uv);
+                cap?.MoveMouse(pointer.texUv);
         }
 
         protected override void OnLeft(TrackedDevice device, bool primary)
@@ -66,7 +89,7 @@ namespace EasyOverlay.X11Screen
                 _ => XcbMouseButton.Left
             };
 
-            cap?.SendMouse(pointer.uv, click, pressed, 0); // TODO keyboard modifiers
+            cap?.SendMouse(pointer.texUv, click, pressed, 0); // TODO keyboard modifiers
         }
 
         protected override void OnScroll(PointerHit pointer, float value)
@@ -81,8 +104,8 @@ namespace EasyOverlay.X11Screen
 
             var mouse = cap.GetMousePosition();
             
-            if (mouse.x >= 0 && mouse.x < cap.size.x
-                             && mouse.y >= 0 && mouse.y < cap.size.y)
+            if (mouse.x >= 0 && mouse.x < texture.width
+                             && mouse.y >= 0 && mouse.y < texture.height)
             {
                 var t = new HmdVector2_t
                 {
@@ -93,8 +116,8 @@ namespace EasyOverlay.X11Screen
 
                 t = new HmdVector2_t
                 {
-                    v0 = mouse.x / (float) cap.size.x,
-                    v1 = mouse.y / (float) cap.size.y
+                    v0 = mouse.x / (float) texture.width,
+                    v1 = 1 - (mouse.y / (float) texture.width + deadZone.y)
                 };
 
                 overlay.SetOverlayCursorPositionOverride(handle, ref t);
@@ -109,8 +132,8 @@ namespace EasyOverlay.X11Screen
                 overlay.SetOverlayMouseScale(handle, ref t);
             }
             
-            
             UploadTexture();
+            overlay.SetOverlayIntersectionMask(handle, ref mask, 1, maskSize);
             
             return true;
         }
@@ -173,12 +196,12 @@ namespace EasyOverlay.X11Screen
             {
                 var v = q * 2;
                 // ◤
-                tris[i++] = v + 1;
                 tris[i++] = v;
+                tris[i++] = v + 1;
                 tris[i++] = v + 2;
                 // ◢
-                tris[i++] = v + 1;
                 tris[i++] = v + 2;
+                tris[i++] = v + 1;
                 tris[i++] = v + 3;
             }
         

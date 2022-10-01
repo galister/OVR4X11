@@ -100,15 +100,16 @@ namespace Modules
             childTransform.localScale = new Vector3(1, 1, len / width);
             childTransform.LookAt(manager.hmd);
             
-            // rotate Z towards hmd
+            // rotate Z towards hmd0
             var euler = childTransform.localEulerAngles;
             childTransform.localEulerAngles = new Vector3(0, 0, euler.z);
             
             // set cursor
             var cursorT = cursor.transform;
-
-            cursorT.position = p.position + p.normal * 0.002f;
-            cursorT.rotation = Quaternion.LookRotation(p.normal);
+            var adjustedUv = (p.nativeUv + new Vector2(-0.5f, -0.5f)) * p.overlay.width;
+            var screenTransform = p.overlay.transform;
+            cursorT.position = screenTransform.TransformPoint(adjustedUv.x, adjustedUv.y, 0.001f);
+            cursorT.rotation = Quaternion.LookRotation(screenTransform.forward);
             if (!cursor.visible)
                 cursor.Show();
 

@@ -7,12 +7,12 @@ namespace EasyOverlay.X11Screen.Interop
 {
     public class XScreenCapture : IDisposable
     {
+        private static readonly Vector2 BlitScale = new(1, -1);
+        
         private readonly IntPtr xShmHandle;
         private readonly int maxBytes;
         private Texture2D internalTexture { get; }
-        private static Vector2 blitScale = new Vector2(1, -1);
-        
-        public readonly Vector2Int size;
+        private readonly Vector2Int size;
         public RenderTexture texture { get; }
 
         public XScreenCapture(int screen)
@@ -55,7 +55,7 @@ namespace EasyOverlay.X11Screen.Interop
             
             internalTexture.LoadRawTextureData(pixBuf, bytes);
             internalTexture.Apply();
-            Graphics.Blit(internalTexture, texture, blitScale, Vector2.up);
+            Graphics.Blit(internalTexture, texture, BlitScale, Vector2.up);
         }
 
         public void Dispose()
