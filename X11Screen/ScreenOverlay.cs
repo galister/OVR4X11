@@ -42,24 +42,28 @@ namespace EasyOverlay.X11Screen
             cap = null;
         }
 
-        protected override void OnMove(PointerHit pointer, bool primary)
+        protected override bool OnMove(PointerHit pointer, bool primary)
         {
             if (primary) 
                 cap?.MoveMouse(pointer.texUv);
+            return true;
         }
 
-        protected override void OnLeft(TrackedDevice device, bool primary)
+        protected override bool OnLeft(TrackedDevice device, bool primary)
         {
+            return true;
         }
 
-        protected override void OnPressed(PointerHit pointer)
+        protected override bool OnPressed(PointerHit pointer)
         {
             SendMouse(pointer, true);
+            return true;
         }
 
-        protected override void OnReleased(PointerHit pointer)
+        protected override bool OnReleased(PointerHit pointer)
         {
             SendMouse(pointer, false);
+            return true;
         }
 
         private void SendMouse(PointerHit pointer, bool pressed)
@@ -74,9 +78,10 @@ namespace EasyOverlay.X11Screen
             cap?.SendMouse(pointer.texUv, click, pressed, 0); // TODO keyboard modifiers
         }
 
-        protected override void OnScroll(PointerHit pointer, float value)
+        protected override bool OnScroll(PointerHit pointer, float value)
         {
-            
+
+            return true;
         }
 
         public override bool Render()

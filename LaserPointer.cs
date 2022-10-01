@@ -111,10 +111,8 @@ namespace Modules
             // forward is backwards for some reason
             var dirToHmd = (refPoint2.transform.position - manager.hmd.position).normalized;
             refPoint2.rotation = Quaternion.LookRotation(dirToHmd, refPoint2.parent.up);
-
-            // rotate Z towards hmd
-            var euler = refPoint2.localEulerAngles;
-            refPoint2.localEulerAngles = new Vector3(0, euler.y, 0);
+            // rotate around Y towards hmd
+            refPoint2.localEulerAngles = new Vector3(0, refPoint2.localEulerAngles.y, 0);
 
             length = len;
             refPoint1.localPosition = new Vector3(0, 0, length / 2);

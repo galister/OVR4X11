@@ -15,6 +15,10 @@ namespace EasyOverlay
 
         public override void Show()
         {
+            if ((referencePoint - manager.hmd.position).magnitude > 5f)
+                // bring closer if we dropped it too far
+                referencePoint = Vector3.zero;
+
             transform.position = manager.spawn.TransformPoint(referencePoint);
             LootAtHmd();
             base.Show();
@@ -22,10 +26,15 @@ namespace EasyOverlay
 
         // TODO protected override void OnMove(PointerHit pointer, bool primary);
 
-        protected override void OnGrabbed(PointerHit pointer)
+        protected override bool OnGrabbed(PointerHit pointer)
         {
-            transform.parent = manager.GetController(pointer.device).transform;
-            grabbed = true;
+            if (!grabbed)
+            {
+                transform.parent = manager.GetController(pointer.device).transform;
+                grabbed = true;
+            }
+
+            return true;
         }
 
         protected override void LateUpdate()
@@ -36,16 +45,20 @@ namespace EasyOverlay
                 transform.LookAt(manager.hmd);
         }
 
-        protected override void OnDropped(PointerHit pointer)
+        protected override bool OnDropped(PointerHit pointer)
         {
-            var t = transform;
-            grabbed = false;
-
-            if (t.parent != manager.transform)
+            if (grabbed)
             {
-                referencePoint = t.localPosition;
-                t.parent = manager.transform;
+                var t = transform;
+                grabbed = false;
+
+                if (t.parent != manager.transform)
+                {
+                    referencePoint = t.localPosition;
+                    t.parent = manager.transform;
+                }
             }
+            return true;
         }
     }
 }

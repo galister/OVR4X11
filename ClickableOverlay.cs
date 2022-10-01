@@ -32,17 +32,17 @@ namespace EasyOverlay
             activeRatio = new Vector2(1 - activeRatio.x, 1 - activeRatio.y);
         }
 
-        protected abstract void OnMove(PointerHit pointer, bool primary);
-        protected abstract void OnLeft(TrackedDevice device, bool primary);
+        protected abstract bool OnMove(PointerHit pointer, bool primary);
+        protected abstract bool OnLeft(TrackedDevice device, bool primary);
         
-        protected abstract void OnPressed(PointerHit pointer);
+        protected abstract bool OnPressed(PointerHit pointer);
 
-        protected abstract void OnReleased(PointerHit pointer);
+        protected abstract bool OnReleased(PointerHit pointer);
 
-        protected abstract void OnGrabbed(PointerHit pointer);
-        protected abstract void OnDropped(PointerHit pointer);
+        protected abstract bool OnGrabbed(PointerHit pointer);
+        protected abstract bool OnDropped(PointerHit pointer);
 
-        protected abstract void OnScroll(PointerHit pointer, float value);
+        protected abstract bool OnScroll(PointerHit pointer, float value);
         
         
         /// <summary>
@@ -81,15 +81,6 @@ namespace EasyOverlay
                     
                     var pointer = new PointerHit(this, hand, ref results);
                     
-                    var click = SteamVR_Input.GetState(ActionSet, ClickAction, hInput, true);
-                    if (click)
-                    {
-                        PointerActivated(pointer);
-                        HandleClick(pointer);
-                    }
-                    else
-                        HandleClickUp(pointer);
-                    
                     var grab = SteamVR_Input.GetState(ActionSet, GrabAction, hInput, true);
                     if (grab)
                     {
@@ -98,6 +89,15 @@ namespace EasyOverlay
                     }
                     else
                         HandleGrabUp(pointer);
+                    
+                    var click = SteamVR_Input.GetState(ActionSet, ClickAction, hInput, true);
+                    if (click)
+                    {
+                        PointerActivated(pointer);
+                        HandleClick(pointer);
+                    }
+                    else
+                        HandleClickUp(pointer);
 
                     if (!click && !grab)
                         PointerIdle(pointer);
@@ -183,8 +183,11 @@ namespace EasyOverlay
 
         private void HandleGrab(PointerHit p)
         {
-            if (grabState != null && grabState.DifferentTypeFrom(p))
+            if (grabState != null)
             {
+                if (grabState.device == p.device)
+                    return; // held
+                
                 grabState.UpdateFrom(p);
                 
 #if DEBUG_LOG
@@ -215,8 +218,11 @@ namespace EasyOverlay
         
         private void HandleClick(PointerHit p)
         {
-            if (clickState != null && clickState.DifferentTypeFrom(p))
+            if (clickState != null)
             {
+                if (clickState.device == p.device)
+                    return; // held
+                
                 clickState.UpdateFrom(p);
 #if DEBUG_LOG
                 Debug.Log($"OnReleased {clickState}");
@@ -227,6 +233,7 @@ namespace EasyOverlay
 #if DEBUG_LOG
             Debug.Log($"OnPressed {p}");
 #endif
+            OnMove(p, true);
             OnPressed(p);
             clickState = p;
         }
@@ -330,11 +337,6 @@ namespace EasyOverlay
             distance = p.distance;
             texUv = p.texUv;
             nativeUv = p.nativeUv;
-        }
-
-        public bool DifferentTypeFrom(PointerHit p)
-        {
-            return device != p.device || modifier != p.modifier;
         }
 
         public override string ToString()
