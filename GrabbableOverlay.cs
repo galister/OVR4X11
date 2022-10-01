@@ -11,14 +11,12 @@ namespace EasyOverlay
         /// Where to spawn after just being shown.
         /// </summary>
         private Vector3 referencePoint;
-
-        private bool grabbed = false;
+        private bool grabbed;
 
         public override void Show()
         {
             transform.position = manager.spawn.TransformPoint(referencePoint);
-            transform.LookAt(manager.hmd);
-
+            LootAtHmd();
             base.Show();
         }
 

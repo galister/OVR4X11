@@ -1,10 +1,9 @@
-using System;
-using EasyOverlay;
-using Plugins.Managed;
+using EasyOverlay.X11Screen.Interop;
+using Modules;
 using UnityEngine;
 using Valve.VR;
 
-namespace Modules.Screen
+namespace EasyOverlay.X11Screen
 {
     public class ScreenOverlay : GrabbableOverlay
     {
@@ -75,41 +74,43 @@ namespace Modules.Screen
             
         }
 
-        public override void Show()
-        {
-            base.Show();
-
-
-            // var t = new VROverlayIntersectionMaskPrimitive_t
-            // {
-            //     m_nPrimitiveType = EVROverlayIntersectionMaskPrimitiveType.OverlayIntersectionPrimitiveType_Rectangle,
-            //     m_Primitive = new VROverlayIntersectionMaskPrimitive_Data_t
-            //     {
-            //         m_Rectangle = new IntersectionMaskRectangle_t
-            //         {
-            //             m_flHeight = 1,0
-            //             m_flWidth = 1,
-            //             m_flTopLeftX = 0,
-            //             m_flTopLeftY = 0
-            //         }
-            //     }
-            // };
-            //
-            // overlay.SetOverlayIntersectionMask(handle, ref t, 1, 1);
-            
-        }
-
         public override bool Render()
         {
             if (!base.Render()) 
                 return false;
 
-            UploadTexture();
+            var mouse = cap.GetMousePosition();
             
-            overlay.SetOverlayInputMethod(handle, VROverlayInputMethod.Mouse);
+            if (mouse.x >= 0 && mouse.x < cap.size.x
+                             && mouse.y >= 0 && mouse.y < cap.size.y)
+            {
+                var t = new HmdVector2_t
+                {
+                    v0 = 1,
+                    v1 = 1
+                };
+                overlay.SetOverlayMouseScale(handle, ref t);
 
-            var a = new HmdVector2_t { v0 = 1, v1 = 1 };
-            overlay.SetOverlayMouseScale(handle, ref a);
+                t = new HmdVector2_t
+                {
+                    v0 = mouse.x / (float) cap.size.x,
+                    v1 = mouse.y / (float) cap.size.y
+                };
+
+                overlay.SetOverlayCursorPositionOverride(handle, ref t);
+            }
+            else
+            {
+                var t = new HmdVector2_t
+                {
+                    v0 = 0,
+                    v1 = 0
+                };
+                overlay.SetOverlayMouseScale(handle, ref t);
+            }
+            
+            
+            UploadTexture();
             
             return true;
         }
@@ -161,8 +162,8 @@ namespace Modules.Screen
                 var y = (-0.5f + v) * size.y;
                 var z = 0; // x * Mathf.Sin(x / radius);
                 verts[i] = new Vector3(x, y, -z);
-                uv[i] = new Vector2(1f-u, 1f-v);
-                normals[i++] = Vector3.back;
+                uv[i] = new Vector2(1f-u, v);
+                normals[i++] = Vector3.forward;
             }
         
             i = 0;

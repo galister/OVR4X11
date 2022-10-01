@@ -21,6 +21,7 @@ namespace Modules
         private readonly List<BaseOverlay> overlays = new();
 
         [SerializeField] public bool windowsVisible;
+        private bool showHidePressed = false;
 
         private void Start()
         {
@@ -70,8 +71,15 @@ namespace Modules
         {
             var showHide = SteamVR_Input.GetState(ActionSet, ShowHideAction, SteamVR_Input_Sources.Any, true);
             if (!showHide)
+            {
+                showHidePressed = false;
+                return;
+            }
+            if (showHidePressed)
                 return;
 
+            showHidePressed = true;
+            
             windowsVisible = !windowsVisible;
             foreach (var overlay in overlays.Where(x => x.showHideBinding))
             {

@@ -46,15 +46,17 @@ namespace EasyOverlay
             for (var h = TrackedDevice.LeftHand; h <= TrackedDevice.RightHand; h++)
             {
                 var hand = manager.GetController(h);
-                var handT = hand.transform.localPosition;
-                var handR = hand.transform.forward * -1;
+                var handTransform = hand.transform;
+
+                var handT = handTransform.position;
+                var handQ = handTransform.forward;
 
                 var hInput = (SteamVR_Input_Sources) h;
             
                 var intersectionParams = new VROverlayIntersectionParams_t
                 {
-                    vSource = new HmdVector3_t { v0 = handT.x, v1 = handT.y, v2 = handT.z },
-                    vDirection = new HmdVector3_t { v0 = handR.x, v1 = handR.y, v2 = handR.z },
+                    vSource = new HmdVector3_t { v0 = handT.x, v1 = handT.y, v2 = -handT.z },
+                    vDirection = new HmdVector3_t { v0 = handQ.x, v1 = handQ.y, v2 = -handQ.z },
                     eOrigin = SteamVR.settings.trackingSpace
                 };
 
@@ -62,7 +64,7 @@ namespace EasyOverlay
                 
                 if (overlay.ComputeOverlayIntersection(handle, ref intersectionParams, ref results))
                 {   // hit
-                    var pointer = new PointerHit(h, hand.modifier, ref results);
+                    var pointer = new PointerHit(hand, ref results);
                     
                     Debug.Log($"{h} pointer @ {gameObject.name} {pointer.uv}");
                     
@@ -93,7 +95,7 @@ namespace EasyOverlay
                     if (Mathf.Abs(scroll.y) > 0.1f)
                         OnScroll(pointer, scroll.y);
                     
-                    PointerOnIntersected(hand, results.fDistance, primaryPointer == pointer);
+                    PointerOnIntersected(pointer, primaryPointer == pointer);
                 }
                 else // no hit
                 {
@@ -102,9 +104,9 @@ namespace EasyOverlay
             }
         }
 
-        protected virtual void PointerOnIntersected(LaserPointer l, float length, bool primary)
+        protected virtual void PointerOnIntersected(PointerHit p, bool primary)
         {
-            l.OnIntersected(length, primary);
+            p.laser.OnIntersected(p, primary);
         }
         
         private void PointerActivated(PointerHit p)
@@ -256,6 +258,7 @@ namespace EasyOverlay
 
     public class PointerHit
     {
+        public LaserPointer laser;
         public TrackedDevice device;
         public float distance;
         public Vector2 uv;
@@ -263,19 +266,15 @@ namespace EasyOverlay
         public Vector3 normal;
         public PointerModifier modifier;
 
-        public PointerHit()
+        public PointerHit(LaserPointer las, ref VROverlayIntersectionResults_t result)
         {
-            
-        }
-
-        public PointerHit(TrackedDevice dev, PointerModifier mod, ref VROverlayIntersectionResults_t result)
-        {
-            device = dev;
+            laser = las;
+            device = las.trackedDevice;
             distance = result.fDistance;
+            modifier = las.modifier;
             uv = new Vector2(result.vUVs.v0, result.vUVs.v1);
-            position = new Vector3(result.vPoint.v0, result.vPoint.v1, result.vPoint.v2);
-            normal = new Vector3(result.vPoint.v0, result.vPoint.v1, result.vPoint.v2);
-            modifier = mod;
+            position = new Vector3(result.vPoint.v0, result.vPoint.v1, -result.vPoint.v2);
+            normal = new Vector3(result.vNormal.v0, result.vNormal.v1, -result.vNormal.v2);
         }
 
         public void UpdateFrom(PointerHit p)

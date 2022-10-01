@@ -82,6 +82,12 @@ namespace EasyOverlay
             visible = false;
         }
 
+        public void LootAtHmd()
+        {
+            var direction = transform.position - manager.hmd.position;
+            transform.rotation = Quaternion.LookRotation(direction);
+        }
+
         private readonly WaitForEndOfFrame waitForEndOfFrame = new();
 
         /// <summary>
@@ -95,17 +101,17 @@ namespace EasyOverlay
             
             overlay.SetOverlayWidthInMeters(handle, width);
             
-            var dot = Vector3.Dot(transform.forward, (manager.hmd.position - transform.position).normalized);
             var t = new SteamVR_Utils.RigidTransform(transform);
-            if (dot > 0f)
-            {
-                t.rot *= Quaternion.AngleAxis(180, Vector3.up);
-            }
+            // var dot = Vector3.Dot(transform.forward, (manager.hmd.position - transform.position).normalized);
+            // if (dot > 0f)
+            // {
+            //     t.rot *= Quaternion.AngleAxis(180, Vector3.up);
+            // }
             var matrix = t.ToHmdMatrix34();
-            overlay.SetOverlayTransformAbsolute(handle, ETrackingUniverseOrigin.TrackingUniverseStanding, ref matrix);
+            overlay.SetOverlayTransformAbsolute(handle, SteamVR.settings.trackingSpace, ref matrix);
             return true;
         }
-        
+
         protected virtual void OnEnable()
         {
             if (String.IsNullOrWhiteSpace(key))
@@ -171,14 +177,14 @@ namespace EasyOverlay
             
             overlay.SetOverlayTexture(handle, ref tex);
             
-            var bounds = new VRTextureBounds_t
-            {
-                uMin = 0,
-                vMin = 0,
-                uMax = 1,
-                vMax = 1
-            };
-            overlay.SetOverlayTextureBounds(handle, ref bounds);
+            // var bounds = new VRTextureBounds_t
+            // {
+            //     uMin = 0,
+            //     vMin = 0,
+            //     uMax = 1,
+            //     vMax = 1
+            // };
+            // overlay.SetOverlayTextureBounds(handle, ref bounds);
         }
     }
 }

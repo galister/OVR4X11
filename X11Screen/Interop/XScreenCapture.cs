@@ -1,11 +1,9 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEditor.ShortcutManagement;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
-using UnityEngine.UIElements;
 
-namespace Plugins.Managed
+namespace EasyOverlay.X11Screen.Interop
 {
     public class XScreenCapture : IDisposable
     {
@@ -94,6 +92,14 @@ namespace Plugins.Managed
             
             xshm_keybd_event(xShmHandle, (byte) keyCode, pressed ? 1UL : 0UL, (ushort) modifiers);
         }
+        
+        public Vector2Int GetMousePosition()
+        {
+            var bigNumber = xshm_mouse_position(xShmHandle);
+            var w = (int)(bigNumber >> 32);
+            var h = (int)(bigNumber & 0xFFFFFFFF);
+            return new Vector2Int(w, h);
+        }
 
         public static Int32 NumScreens()
         {
@@ -103,7 +109,7 @@ namespace Plugins.Managed
         private (short x, short y) MouseCoordinatesFromUv(Vector2 uv)
         {
             var x = (short)(uv.x * size.x);
-            var y = (short)(1 - uv.y * size.y);
+            var y = (short)((1 - uv.y) * size.y);
             return (x, y);
         }
 
@@ -130,6 +136,9 @@ namespace Plugins.Managed
         
         [DllImport("libxshm_cap.so")]
         private static extern UInt64 xshm_screen_size(Int32 screen);
+        
+        [DllImport("libxshm_cap.so")]
+        private static extern UInt64 xshm_mouse_position(IntPtr xhsm_instance);
 
         [DllImport("libxshm_cap.so")]
         private static extern IntPtr xshm_pixel_buffer(IntPtr xhsm_instance);

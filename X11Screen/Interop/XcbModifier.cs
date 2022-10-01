@@ -1,6 +1,6 @@
 using System;
 
-namespace Plugins.Managed
+namespace EasyOverlay.X11Screen.Interop
 {
     [Flags]
     public enum XcbModifier : ushort

@@ -1,4 +1,4 @@
-namespace Plugins.Managed
+namespace EasyOverlay.X11Screen.Interop
 {
     public enum XcbMouseButton : byte
     {
