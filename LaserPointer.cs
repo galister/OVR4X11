@@ -42,6 +42,8 @@ namespace EasyOverlay
             width = 0.002f;
             showHideBinding = false;
 
+            cursor.owner = this;
+            
             var go = new GameObject
             {
                 name = "RefPoint1",
@@ -100,8 +102,9 @@ namespace EasyOverlay
         /// Called by the intersecting ClickableOverlay from LateUpdate
         /// </summary>
         /// <param name="p">Hit data</param>
-        /// <param name="primary">If the pointer should use primary colors (eg. owns the mouse)</param>
-        public void OnIntersected(PointerHit p, bool primary)
+        /// <param name="primary">If the laser should use primary colors (eg. owns the mouse)</param>
+        /// <param name="wantCursor">Show cursor or not</param>
+        public void OnIntersected(PointerHit p, bool primary, bool wantCursor)
         {
             if (wasIntersectedThisFrame)
                 return;
@@ -121,15 +124,21 @@ namespace EasyOverlay
 
             length = len;
             refPoint1.localPosition = new Vector3(0, 0, length / 2);
-            
-            // set cursor
-            var cursorT = cursor.transform;
-            var adjustedUv = (p.nativeUv + new Vector2(-0.5f, -0.5f)) * p.overlay.width;
-            var screenTransform = p.overlay.transform;
-            cursorT.position = screenTransform.TransformPoint(adjustedUv.x, adjustedUv.y, 0.001f);
-            cursorT.rotation = Quaternion.LookRotation(screenTransform.forward);
-            if (!cursor.visible)
-                cursor.Show();
+
+            if (wantCursor)
+            {
+                // set cursor
+                var cursorT = cursor.transform;
+                var adjustedUv = (p.nativeUv + new Vector2(-0.5f, -0.5f)) * p.overlay.width;
+                adjustedUv += new Vector2(cursor.width / 2f, -cursor.width / 2f);
+                var screenTransform = p.overlay.transform;
+                cursorT.position = screenTransform.TransformPoint(adjustedUv.x, adjustedUv.y, 0.001f);
+                cursorT.rotation = Quaternion.LookRotation(screenTransform.forward);
+                if (!cursor.visible)
+                    cursor.Show();
+            }
+            else if (cursor.visible) 
+                cursor.Hide();
 
             color = modifier switch
             {

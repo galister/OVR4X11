@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using Valve.VR;
 
@@ -27,6 +28,11 @@ namespace EasyOverlay
         [Tooltip("Respond to the Show/Hide binding.")]
         [SerializeField]
         public bool showHideBinding = true;
+
+        public uint zOrder = 0;
+
+        [DoNotSerialize]
+        public BaseOverlay owner;
 
         protected ulong handle = OpenVR.k_ulOverlayHandleInvalid;
         protected CVROverlay overlay;
@@ -66,7 +72,9 @@ namespace EasyOverlay
                 visible = false;
                 return;
             }
-
+            
+            overlay.SetOverlaySortOrder(handle, zOrder);
+            
             visible = true;
             UploadTexture();
         }

@@ -18,11 +18,11 @@ namespace EasyOverlay
         private const string GrabAction = "Grab";
         private const string ScrollAction = "Scroll";
 
-        private PointerHit clickState;
-        private PointerHit grabState;
+        protected PointerHit clickState;
+        protected PointerHit grabState;
 
-        private PointerHit primaryPointer;
-        private PointerHit secondaryPointer;
+        protected PointerHit primaryPointer { get; private set; }
+        protected PointerHit secondaryPointer { get; private set; }
 
         private List<PointerHit> pointerHits = new(2);
         
@@ -36,7 +36,11 @@ namespace EasyOverlay
             activeRatio = new Vector2(1 - activeRatio.x, 1 - activeRatio.y);
         }
 
+        /// <summary>
+        /// Guaranteed to be called before OnPressed.
+        /// </summary>
         protected abstract bool OnMove(PointerHit pointer, bool primary);
+        
         protected abstract bool OnLeft(TrackedDevice device, bool primary);
         
         protected abstract bool OnPressed(PointerHit pointer);
@@ -64,6 +68,9 @@ namespace EasyOverlay
             for (var h = TrackedDevice.LeftHand; h <= TrackedDevice.RightHand; h++)
             {
                 var hand = manager.GetController(h);
+                if (hand == null)
+                    continue;
+
                 var handTransform = hand.transform;
 
                 var handT = handTransform.position;
@@ -152,7 +159,7 @@ namespace EasyOverlay
 
         protected virtual void PointerOnIntersected(PointerHit p, bool primary)
         {
-            p.laser.OnIntersected(p, primary);
+            p.laser.OnIntersected(p, primary, true);
         }
         
         private void PromotePointer(PointerHit p)
@@ -262,14 +269,14 @@ namespace EasyOverlay
 #if DEBUG_LOG
             Debug.Log($"OnPressed {p}");
 #endif
+            clickState = p;
             OnMove(p, true);
             OnPressed(p);
-            clickState = p;
         }
 
         private void HandleClickUp(PointerHit p)
         {
-            if (clickState == null) return;
+            if (clickState == null　|| p.device != clickState.device) return;
             
             clickState.UpdateFrom(p);
                 

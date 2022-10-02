@@ -20,6 +20,9 @@ namespace EasyOverlay
 
         [SerializeField] public bool windowsVisible;
         private bool showHidePressed = false;
+        
+        [SerializeField] 
+        public BaseOverlay desktopCursor;
 
         private void Start()
         {

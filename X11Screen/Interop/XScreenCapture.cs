@@ -86,12 +86,9 @@ namespace EasyOverlay.X11Screen.Interop
             xshm_mouse_event(xShmHandle, to.x, to.y, (byte) button, pressed ? 1 : 0);
         }
 
-        public void SendKey(KeyCode keyCode, bool pressed)
+        public static void SendKey(int keyCode, bool pressed)
         {
-            if (xShmHandle == IntPtr.Zero)
-                return;
-            
-            xshm_keybd_event(xShmHandle, (byte) keyCode, pressed ? 1 : 0);
+            xshm_keybd_event(IntPtr.Zero, (byte) keyCode, pressed ? 1 : 0);
         }
         
         public Vector2Int GetMousePosition()

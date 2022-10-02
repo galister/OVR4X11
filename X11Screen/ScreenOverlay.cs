@@ -114,6 +114,11 @@ namespace EasyOverlay.X11Screen
             return true;
         }
 
+        protected override void PointerOnIntersected(PointerHit p, bool primary)
+        {
+            p.laser.OnIntersected(p, primary, false);
+        }
+
         public override bool Render()
         {
             if (!base.Render()) 
@@ -124,29 +129,27 @@ namespace EasyOverlay.X11Screen
             if (mouse.x >= 0 && mouse.x < texture.width
                              && mouse.y >= 0 && mouse.y < texture.height)
             {
-                var t = new HmdVector2_t
-                {
-                    v0 = 1,
-                    v1 = 1
-                };
-                overlay.SetOverlayMouseScale(handle, ref t);
+                var vect = new Vector2(mouse.x / (float)texture.width, (texture.height-mouse.y) / (float)texture.height);
+                vect += new Vector2(-0.5f, -0.5f);
+                vect *= new Vector2(width, width * activeRatio.y);
+                vect += new Vector2(manager.desktopCursor.width / 2f, -manager.desktopCursor.width / 2f);
+                
+                var cursorT = manager.desktopCursor.transform;
+                var screenTransform = transform;
+                cursorT.position = screenTransform.TransformPoint(vect.x, vect.y, 0.001f);
+                cursorT.rotation = Quaternion.LookRotation(screenTransform.forward);
 
-                t = new HmdVector2_t
+                if (manager.desktopCursor.owner != this)
                 {
-                    v0 = mouse.x / (float) texture.width,
-                    v1 = 1 - (mouse.y / (float) texture.width + deadZone.y)
-                };
-
-                overlay.SetOverlayCursorPositionOverride(handle, ref t);
+                    manager.desktopCursor.owner = this;
+                    if (!manager.desktopCursor.visible)
+                        manager.desktopCursor.Show();
+                }
             }
-            else
+            else if (manager.desktopCursor.owner == this)
             {
-                var t = new HmdVector2_t
-                {
-                    v0 = 0,
-                    v1 = 0
-                };
-                overlay.SetOverlayMouseScale(handle, ref t);
+                manager.desktopCursor.Hide();
+                manager.desktopCursor.owner = null;
             }
             
             UploadTexture();
