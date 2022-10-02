@@ -1,12 +1,10 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using EasyOverlay;
 using UnityEngine;
 using Valve.VR;
 
-namespace Modules
+namespace EasyOverlay
 {
     public class OverlayManager : MonoBehaviour
     {

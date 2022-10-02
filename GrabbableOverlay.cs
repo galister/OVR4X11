@@ -50,10 +50,12 @@ namespace EasyOverlay
         {
             if (!grabbed) return false;
 
-            if (pointer.device == TrackedDevice.RightHand)
-                transform.localPosition += Vector3.forward * (Mathf.Pow(value, 3));
+            if (pointer.modifier == PointerModifier.RightClick)
+                width = Mathf.Clamp(width - Mathf.Pow(value, 3) * 2, 0.1f, 5f);
+            else if (pointer.modifier == PointerModifier.MiddleClick)
+                return true; // TODO curving
             else
-                width = Mathf.Clamp(width - Mathf.Pow(value, 3), 0.1f, 5f);
+                transform.localPosition += Vector3.forward * (Mathf.Pow(value, 3) * 2);
             
             return true;
         }

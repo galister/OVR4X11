@@ -1,11 +1,10 @@
 using System;
 using System.Collections;
-using EasyOverlay;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using Valve.VR;
 
-namespace Modules
+namespace EasyOverlay
 {
     /// <summary>
     /// Place on tracked controller objects
@@ -23,11 +22,11 @@ namespace Modules
         private Color color;
 
         private readonly Color leftClickColor = new(0x00, 0x60, 0x80, 0x80);
-        private readonly Color rightClickColor = new(0x00, 0x60, 0x80, 0x80);
+        private readonly Color rightClickColor = new(0xB0, 0x30, 0x00, 0x80);
         private readonly Color middleClickColor = new(0x60, 0x00, 0x80, 0x80);
         
         private readonly Color leftClickColorDiminished = new(0x00, 0x30, 0x40, 0x80);
-        private readonly Color rightClickColorDiminished = new(0x00, 0x30, 0x40, 0x80);
+        private readonly Color rightClickColorDiminished = new(0x60, 0x20, 0x00, 0x80);
         private readonly Color middleClickColorDiminished = new(0x30, 0x00, 0x40, 0x80);
 
         public PointerModifier modifier;
@@ -194,12 +193,14 @@ namespace Modules
         {
             var t = transform;
             var toEye = manager.hmd.position - t.position;
-            var dot = Vector3.Dot(toEye, t.up);
+            var dot = Vector3.Dot(toEye, t.right);
+            dot *= trackedDevice == TrackedDevice.LeftHand ? -1f : 1f;
+
             return dot switch
             {
-                > 0.5f => PointerModifier.MiddleClick, // backhand towards face
-                < -0.5f => PointerModifier.RightClick, // palm towards face
-                _ => PointerModifier.None // anything in between
+                > 0.4f => PointerModifier.MiddleClick,
+                < -0.33f => PointerModifier.RightClick,
+                _ => PointerModifier.None
             };
         }
 

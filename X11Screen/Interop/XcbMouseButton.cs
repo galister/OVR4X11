@@ -4,7 +4,13 @@ namespace EasyOverlay.X11Screen.Interop
     {
         None = 0,
         Left = 1,
-        Right = 2,
-        Middle = 3
+        Middle = 2,
+        Right = 3,
+        WheelUp = 4,
+        WheelDown = 5,
+        WheelLeft = 6,
+        WheelRight = 7,
+        XButton1 = 8,
+        XButton2 = 9
     }
 }

@@ -1,5 +1,5 @@
+using System;
 using EasyOverlay.X11Screen.Interop;
-using Modules;
 using UnityEngine;
 using Valve.VR;
 
@@ -12,6 +12,7 @@ namespace EasyOverlay.X11Screen
         [SerializeField]
         public int screen;
         
+        private DateTime freezeCursor = DateTime.MinValue;
         private VROverlayIntersectionMaskPrimitive_t mask;
         private uint maskSize;
 
@@ -44,7 +45,7 @@ namespace EasyOverlay.X11Screen
 
         protected override bool OnMove(PointerHit pointer, bool primary)
         {
-            if (primary) 
+            if (primary && freezeCursor < DateTime.UtcNow) 
                 cap?.MoveMouse(pointer.texUv);
             return true;
         }
@@ -56,6 +57,7 @@ namespace EasyOverlay.X11Screen
 
         protected override bool OnPressed(PointerHit pointer)
         {
+            freezeCursor = DateTime.UtcNow + TimeSpan.FromMilliseconds(200);
             SendMouse(pointer, true);
             return true;
         }
@@ -78,12 +80,38 @@ namespace EasyOverlay.X11Screen
             cap?.SendMouse(pointer.texUv, click, pressed);
         }
 
+        private DateTime nextScroll = DateTime.MinValue;
         protected override bool OnScroll(PointerHit pointer, float value)
         {
             if (base.OnScroll(pointer, value))
                 return true;
-            
-            return false; //TODO
+
+            if (nextScroll > DateTime.UtcNow)
+                return true;
+
+
+            if (pointer.modifier == PointerModifier.MiddleClick)
+            {
+                // super fast scroll, 1 click per frame
+            }
+            else
+            {
+                var millis = pointer.modifier == PointerModifier.None ? 100 : 50;
+                nextScroll = DateTime.UtcNow.AddMilliseconds((1 - Mathf.Abs(value)) * millis);
+            }
+
+            if (value < 0)
+            {
+                cap?.SendMouse(pointer.texUv, XcbMouseButton.WheelDown, true);
+                cap?.SendMouse(pointer.texUv, XcbMouseButton.WheelDown, false);
+            }
+            else
+            {
+                cap?.SendMouse(pointer.texUv, XcbMouseButton.WheelUp, true);
+                cap?.SendMouse(pointer.texUv, XcbMouseButton.WheelUp, false);
+            }
+
+            return true;
         }
 
         public override bool Render()
