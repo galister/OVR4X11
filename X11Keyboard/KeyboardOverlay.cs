@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Linq;
 using EasyOverlay.X11Screen.Interop;
@@ -11,6 +12,8 @@ namespace EasyOverlay.X11Keyboard
 {
     public class KeyboardOverlay : GrabbableOverlay
     {
+        
+        
         [SerializeField] 
         public Canvas Canvas;
         
@@ -37,6 +40,8 @@ namespace EasyOverlay.X11Keyboard
         
         [SerializeField] 
         public float ButtonPadding;
+
+        public static KeyboardOverlay instance;
         
         private readonly Color mainLayoutColor = new(0x00, 0x60, 0x80, 0x80);
         private readonly Color shiftLayoutColor = new(0xB0, 0x30, 0x00, 0x80);
@@ -51,14 +56,21 @@ namespace EasyOverlay.X11Keyboard
 
         private bool dirty = true;
 
+        public KeyboardOverlay()
+        {
+            if (instance != null)
+                throw new ApplicationException("Can't have more than one KeyboardOverlay components!");
+            instance = this;
+        }
+        
         protected override void Start()
         {
             base.Start();
 
-            if (config.CheckConfig())
+            if (config.LoadAndCheckConfig())
             {
                 BuildKeyboard();
-                shiftCode = config.keycodes["RSHFT"];
+                shiftCode = config.keycodes["Shift_R"];
                 modifierLayerMap[0] = MainLayer;
                 modifierLayerMap[1] = ShiftLayer;
                 modifierLayerMap[2] = AltLayer;
@@ -83,13 +95,25 @@ namespace EasyOverlay.X11Keyboard
                 XScreenCapture.SendKey(keycode, false);
             }
         }
-        
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            UiCamera.enabled = true;
+        }
+
+        protected override void OnDisable()
+        {
+            UiCamera.enabled = false;
+            base.OnDisable();
+        }
+
         public override bool Render()
         {
             if (!base.Render()) 
                 return false;
             
-            if (true || dirty)
+            if (dirty)
                 UploadTexture();
             dirty = false;
             return true;
@@ -174,6 +198,15 @@ namespace EasyOverlay.X11Keyboard
             
             if (config.keycodes.TryGetValue(keyStr, out var keycode))
                 btn.onClick.AddListener(() => OnKeyPressed(keycode, shift));
+            else if (config.macros.TryGetValue(keyStr, out var macro))
+            {
+                var events = config.KeyEventsFromMacro(macro);
+                btn.onClick.AddListener(() =>
+                {
+                    foreach (var (kc, down) in events) 
+                        XScreenCapture.SendKey(kc, down);;
+                });
+            }
             else if (config.exec_commands.TryGetValue(keyStr, out var argv))
             {
                 btn.onClick.AddListener(() =>

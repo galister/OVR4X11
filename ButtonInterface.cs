@@ -29,6 +29,14 @@ namespace EasyOverlay
             uvToButtonMap = new byte[(int)width / ResDivider, (int)height / ResDivider];
         }
 
+        public void AddButton(Button b)
+        {
+            var t = b.GetComponent<RectTransform>();
+            var rectT = t.rect;
+            var posT = t.anchoredPosition;
+            AddButton(b, posT.x, posT.y, rectT.width, rectT.height);
+        }
+        
         /// <summary>
         /// Call this with Unity UI coordinates when adding buttons to your UI
         /// </summary>

@@ -166,7 +166,7 @@ namespace EasyOverlay
             if (handle == OpenVR.k_ulOverlayHandleInvalid || !visible)
                 return false;
 
-            overlay.SetOverlaySortOrder(handle, 0xFFFFU);
+            overlay.SetOverlaySortOrder(handle, zOrder);
             overlay.SetOverlayWidthInMeters(handle, width);
             
             var t = new SteamVR_Utils.RigidTransform(refPoint2);
@@ -201,14 +201,14 @@ namespace EasyOverlay
         private PointerModifier RecalculateModifier()
         {
             var t = transform;
-            var toEye = manager.hmd.position - t.position;
-            var dot = Vector3.Dot(toEye, t.right);
+            var hmdUp = manager.hmd.up;
+            var dot = Vector3.Dot(hmdUp, t.right);
             dot *= trackedDevice == TrackedDevice.LeftHand ? -1f : 1f;
 
             return dot switch
             {
-                > 0.4f => PointerModifier.MiddleClick,
-                < -0.33f => PointerModifier.RightClick,
+                > 0.5f => PointerModifier.MiddleClick,
+                < -0.35f => PointerModifier.RightClick,
                 _ => PointerModifier.None
             };
         }

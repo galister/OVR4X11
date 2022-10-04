@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -86,6 +87,12 @@ namespace EasyOverlay
             {
                 overlay.enabled = windowsVisible;
             }
+        }
+
+        private void OnDisable()
+        {
+            foreach (var o in overlays) 
+                o.enabled = false;
         }
     }
 }
