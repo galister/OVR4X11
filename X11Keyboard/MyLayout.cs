@@ -21,9 +21,9 @@ namespace EasyOverlay.X11Keyboard
             main_layout = new[]
             {
                 new [] {"grave", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "minus", "equal", "BackSpace"},
-                new [] {"Tab", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "bracketleft", "bracketright", "backslash"},
-                new [] {"XF86Favorites", "A", "S", "D", "F", "G", "H", "J", "K", "L", "semicolon", "apostrophe", "Return"},
-                new [] {"Shift_L", "Z", "X", "C", "V", "B", "N", "M", "comma", "period", "slash", "Shift_R"},
+                new [] {"Tab", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "bracketleft", "bracketright", "backslash"},
+                new [] {"XF86Favorites", "a", "s", "d", "f", "g", "h", "j", "k", "l", "semicolon", "apostrophe", "Return"},
+                new [] {"Shift_L", "z", "x", "c", "v", "b", "n", "m", "comma", "period", "slash", "Shift_R"},
                 new [] {"Control_L", "Super_L", "Alt_L", "space", "Meta_R", "Menu", "Control_R", "EXEC1"}
             };
             

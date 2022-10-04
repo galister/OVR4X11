@@ -1,37 +1,33 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using EasyOverlay.Overlay;
+using EasyOverlay.UI;
 using Newtonsoft.Json;
-using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
-using Valve.VR;
 
 namespace EasyOverlay
 {
-    public sealed class NotificationOverlay : BaseOverlay
+    public sealed class Notifications : BaseOverlay
     {
-        public static NotificationOverlay instance;
+        private static Notifications instance;
         
         [SerializeField] public int listenPort = 42069;
         [SerializeField] public float popupLengthSeconds = 4f;
-        [SerializeField] public float repeatInSeconds = 1f;
-        [SerializeField] public TextMeshProUGUI titleBox;
-        [SerializeField] public TextMeshProUGUI textBox;
-        [SerializeField] public Camera uiCamera;
+        [SerializeField] public float repeatInSeconds = 0.5f;
+        [SerializeField] public EasyUiManager ui;
 
+        private readonly ConcurrentQueue<XSOMessage> messages = new();
         private DateTime canReadAt = DateTime.MinValue;
-        private ConcurrentQueue<XSOMessage> messages = new();
         private NotificationsReceiver receiver;
         private Coroutine coroutine;
         
-        public NotificationOverlay()
+        public Notifications()
         {
             if (instance != null)
                 throw new ApplicationException("Can't have more than one NotificationOverlay components!");
@@ -43,9 +39,10 @@ namespace EasyOverlay
             base.Start();
 
             receiver = new NotificationsReceiver(listenPort, messages);
+            receiver.Start();
         }
 
-        protected override IEnumerator AfterEnable()
+        protected override IEnumerator FirstShow()
         {
             yield break;
         }
@@ -64,33 +61,29 @@ namespace EasyOverlay
 
         public override void Show()
         {
-            uiCamera.enabled = true;
+            ui.uiCamera.enabled = true;
             base.Show();
 
-            var m = new SteamVR_Utils.RigidTransform(transform.localPosition, transform.localRotation).ToHmdMatrix34();
-            overlay.SetOverlayTransformTrackedDeviceRelative(handle, OpenVR.k_unTrackedDeviceIndex_Hmd, ref m);
-            overlay.SetOverlayWidthInMeters(handle, width);
+            UploadPositionRelative(TrackedDevice.Hmd);
         }
 
         public override void Hide()
         {
             base.Hide();
-            uiCamera.enabled = false;
-        }
-
-        public override bool Render()
-        {
-            UploadTexture();
-            return true;
+            ui.uiCamera.enabled = false;
         }
 
         private void Popup(string title, string text)
         {
-            titleBox.text = title;
-            textBox.text = text;
+            ui.GetTextField("title").text = title;
+            ui.GetTextField("text").text = text;
 
-            if (coroutine != null) // already displaying something
+            if (coroutine != null)
+            {
+                // already displaying something
                 StopCoroutine(coroutine);
+                UploadTexture();
+            }
             else
                 Show();
             coroutine = StartCoroutine(Expire());
@@ -167,6 +160,9 @@ namespace EasyOverlay
         }
     }
     
+    // ReSharper disable InconsistentNaming
+    // ReSharper disable UnusedMember.Global
+    // ReSharper disable UnusedAutoPropertyAccessor.Global
     public struct XSOMessage
     {
         public int messageType { get; set; }

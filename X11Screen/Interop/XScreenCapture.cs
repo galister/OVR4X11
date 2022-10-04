@@ -82,7 +82,7 @@ namespace EasyOverlay.X11Screen.Interop
                 return;
             
             var to = MouseCoordinatesFromUv(uv);
-            Debug.Log($"Mouse: {button} {(pressed ? "down" : "up")} at {to}");
+            //Debug.Log($"Mouse: {button} {(pressed ? "down" : "up")} at {to}");
             xshm_mouse_event(xShmHandle, to.x, to.y, (byte) button, pressed ? 1 : 0);
         }
 

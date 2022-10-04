@@ -1,4 +1,5 @@
 using System;
+using EasyOverlay.Overlay;
 using EasyOverlay.X11Screen.Interop;
 using UnityEngine;
 using Valve.VR;
@@ -13,13 +14,43 @@ namespace EasyOverlay.X11Screen
         public int screen;
         
         private DateTime freezeCursor = DateTime.MinValue;
-        private VROverlayIntersectionMaskPrimitive_t mask;
-        private uint maskSize;
 
-        protected override void LateUpdate()
+        protected internal override void BeforeRender()
         {
             base.LateUpdate();
             cap?.Tick();
+            
+            var mouse = cap.GetMousePosition();
+            
+            if (mouse.x >= 0 && mouse.x < texture.width
+                             && mouse.y >= 0 && mouse.y < texture.height)
+            {
+                var point = new Vector2(mouse.x / (float)texture.width, (texture.height-mouse.y) / (float)texture.height);
+                point += new Vector2(-0.5f, -0.5f);
+                point *= new Vector2(width, width * activeRatio.y);
+                point += new Vector2(manager.desktopCursor.width / 2f, -manager.desktopCursor.width / 2f);
+                point /= new Vector2(transform.localScale.x, transform.localScale.y);
+                
+                var cursorT = manager.desktopCursor.transform;
+                var screenTransform = transform;
+                cursorT.position = screenTransform.TransformPoint(point.x, point.y, 0.001f);
+                cursorT.rotation = Quaternion.LookRotation(screenTransform.forward);
+
+                if (manager.desktopCursor.owner != this)
+                {
+                    manager.desktopCursor.owner = this;
+                    if (!manager.desktopCursor.visible)
+                        manager.desktopCursor.Show();
+                }
+                manager.desktopCursor.UploadPositionAbsolute();
+            }
+            else if (manager.desktopCursor.owner == this)
+            {
+                manager.desktopCursor.Hide();
+                manager.desktopCursor.owner = null;
+            }
+            
+            UploadTexture();
         }
         
         protected override void OnEnable()
@@ -27,17 +58,21 @@ namespace EasyOverlay.X11Screen
             cap = new XScreenCapture(screen);
             texture = cap.texture;
             
-            SetDeadzone(new Vector2Int(0, texture.width - texture.height)); 
+            UpdateTextureBounds(); 
 
             base.OnEnable();
-
-            if (Application.isEditor)
-                GenerateMesh();
         }
 
         protected override void OnDisable()
         {
             base.OnDisable();
+
+            if (manager.desktopCursor.owner == this)
+            {
+                manager.desktopCursor.Hide();
+                manager.desktopCursor.owner = null;
+            }
+
             cap?.Dispose();
             texture = null;
             cap = null;
@@ -46,7 +81,7 @@ namespace EasyOverlay.X11Screen
         protected override bool OnMove(PointerHit pointer, bool primary)
         {
             if (primary && freezeCursor < DateTime.UtcNow) 
-                cap?.MoveMouse(pointer.texUv);
+                cap?.MoveMouse(pointer.uv);
             return true;
         }
 
@@ -77,7 +112,7 @@ namespace EasyOverlay.X11Screen
                 _ => XcbMouseButton.Left
             };
 
-            cap?.SendMouse(pointer.texUv, click, pressed);
+            cap?.SendMouse(pointer.uv, click, pressed);
         }
 
         private DateTime nextScroll = DateTime.MinValue;
@@ -102,135 +137,21 @@ namespace EasyOverlay.X11Screen
 
             if (value < 0)
             {
-                cap?.SendMouse(pointer.texUv, XcbMouseButton.WheelDown, true);
-                cap?.SendMouse(pointer.texUv, XcbMouseButton.WheelDown, false);
+                cap?.SendMouse(pointer.uv, XcbMouseButton.WheelDown, true);
+                cap?.SendMouse(pointer.uv, XcbMouseButton.WheelDown, false);
             }
             else
             {
-                cap?.SendMouse(pointer.texUv, XcbMouseButton.WheelUp, true);
-                cap?.SendMouse(pointer.texUv, XcbMouseButton.WheelUp, false);
+                cap?.SendMouse(pointer.uv, XcbMouseButton.WheelUp, true);
+                cap?.SendMouse(pointer.uv, XcbMouseButton.WheelUp, false);
             }
 
             return true;
         }
 
-        protected override void PointerOnIntersected(PointerHit p, bool primary)
+        protected override void DrawPointer(PointerHit p, bool primary)
         {
-            p.laser.OnIntersected(p, primary, false);
-        }
-
-        public override bool Render()
-        {
-            if (!base.Render()) 
-                return false;
-
-            var mouse = cap.GetMousePosition();
-            
-            if (mouse.x >= 0 && mouse.x < texture.width
-                             && mouse.y >= 0 && mouse.y < texture.height)
-            {
-                var vect = new Vector2(mouse.x / (float)texture.width, (texture.height-mouse.y) / (float)texture.height);
-                vect += new Vector2(-0.5f, -0.5f);
-                vect *= new Vector2(width, width * activeRatio.y);
-                vect += new Vector2(manager.desktopCursor.width / 2f, -manager.desktopCursor.width / 2f);
-                
-                var cursorT = manager.desktopCursor.transform;
-                var screenTransform = transform;
-                cursorT.position = screenTransform.TransformPoint(vect.x, vect.y, 0.001f);
-                cursorT.rotation = Quaternion.LookRotation(screenTransform.forward);
-
-                if (manager.desktopCursor.owner != this)
-                {
-                    manager.desktopCursor.owner = this;
-                    if (!manager.desktopCursor.visible)
-                        manager.desktopCursor.Show();
-                }
-            }
-            else if (manager.desktopCursor.owner == this)
-            {
-                manager.desktopCursor.Hide();
-                manager.desktopCursor.owner = null;
-            }
-            
-            UploadTexture();
-            overlay.SetOverlayIntersectionMask(handle, ref mask, 1, maskSize);
-            
-            return true;
-        }
-
-        private void GenerateMesh()
-        {
-            // Number of horizontal vertices
-            const int columns = 2;
-            
-            const int totalVerts = columns * 2;
-            const int quads = columns - 1;
-            const float colStep = 1f / quads;
-
-            if (!gameObject.TryGetComponent<MeshFilter>(out var meshFilter))
-            {
-                meshFilter = gameObject.AddComponent<MeshFilter>();
-                meshFilter.sharedMesh = new Mesh();
-            }
-
-            var mesh = meshFilter.sharedMesh;
-            mesh.Clear();
-
-            if (!gameObject.TryGetComponent<MeshRenderer>(out var meshRenderer))
-            {
-                meshRenderer = gameObject.AddComponent<MeshRenderer>();
-                meshRenderer.material = new Material(Shader.Find("Unlit/Texture"));
-                meshRenderer.material.mainTexture = texture;
-            }
-            
-            var mainTex = meshRenderer.material.mainTexture;
-            if (mainTex == null)
-            {
-                Debug.Log("Cannot create screen -- MainTex not set!");
-                return;
-            }
-        
-            var scale = transform.localScale;
-            var size = new Vector2(mainTex.width * scale.x * 0.001f, mainTex.height * scale.y * 0.001f);
-        
-            var verts = new Vector3[totalVerts];
-            var uv = new Vector2[totalVerts];
-            var normals = new Vector3[totalVerts];
-        
-            var i = 0;
-            for (var u = 0f; u <= 1f; u+=colStep)
-            for (var v = 0f; v <= 1f; v+=1f)
-            {
-                var x = (-0.5f + u) * size.x;
-                var y = (-0.5f + v) * size.y;
-                var z = 0; // x * Mathf.Sin(x / radius);
-                verts[i] = new Vector3(x, y, -z);
-                uv[i] = new Vector2(1f-u, v);
-                normals[i++] = Vector3.forward;
-            }
-        
-            i = 0;
-            
-            var tris = new int[quads * 6];
-            for (var q = 0; q < quads; q++)
-            {
-                var v = q * 2;
-                // ◤
-                tris[i++] = v;
-                tris[i++] = v + 1;
-                tris[i++] = v + 2;
-                // ◢
-                tris[i++] = v + 2;
-                tris[i++] = v + 1;
-                tris[i++] = v + 3;
-            }
-        
-            mesh.vertices = verts;
-            mesh.uv = uv;
-            mesh.normals = normals;
-            mesh.triangles = tris;
-            
-            mesh.RecalculateBounds();
+            p.pointer.OnIntersected(p, primary, false);
         }
     }
 }

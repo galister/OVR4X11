@@ -1,8 +1,9 @@
 using System;
 using System.Collections;
+using EasyOverlay.Overlay;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
-using Valve.VR;
 
 namespace EasyOverlay
 {
@@ -17,23 +18,27 @@ namespace EasyOverlay
         [SerializeField] 
         public BaseOverlay cursor;
         
+        [DoNotSerialize]
+        public PointerModifier modifier;
+        
         private const float MaxLength = 5f;
         private float length;
         private Color color;
 
-        private readonly Color leftClickColor = new(0x00, 0x60, 0x80, 0x80);
-        private readonly Color rightClickColor = new(0xB0, 0x30, 0x00, 0x80);
-        private readonly Color middleClickColor = new(0x60, 0x00, 0x80, 0x80);
+        private static readonly Color LeftClickColor = new(0x00, 0x60, 0x80, 0x80);
+        private static readonly Color RightClickColor = new(0xB0, 0x30, 0x00, 0x80);
+        private static readonly Color MiddleClickColor = new(0x60, 0x00, 0x80, 0x80);
         
-        private readonly Color leftClickColorDiminished = new(0x00, 0x30, 0x40, 0x80);
-        private readonly Color rightClickColorDiminished = new(0x60, 0x20, 0x00, 0x80);
-        private readonly Color middleClickColorDiminished = new(0x30, 0x00, 0x40, 0x80);
+        private static readonly Color LeftClickColorDiminished = new(0x00, 0x30, 0x40, 0x80);
+        private static readonly Color RightClickColorDiminished = new(0x60, 0x20, 0x00, 0x80);
+        private static readonly Color MiddleClickColorDiminished = new(0x30, 0x00, 0x40, 0x80);
 
-        public PointerModifier modifier;
-        private bool wasIntersectedThisFrame = false;
-
-        private Transform refPoint1;
-        private Transform refPoint2;
+        private static readonly Color NeutralColor = new(0xA0, 0xA0, 0xA0, 0x80);
+        
+        private bool wasIntersectedThisFrame;
+        
+        private Transform midPoint;
+        private Transform renderTransform;
 
         protected override void Start()
         {
@@ -46,7 +51,7 @@ namespace EasyOverlay
             
             var go = new GameObject
             {
-                name = "RefPoint1",
+                name = "MidPoint",
                 transform =
                 {
                     parent = transform,
@@ -54,37 +59,29 @@ namespace EasyOverlay
                     localEulerAngles = new Vector3(90, 0, 0)
                 }
             };
-            refPoint1 = go.transform;
+            midPoint = go.transform;
 
             var go2 = new GameObject
             {
-                name = "RefPoint2",
+                name = "RenderTransform",
                 transform =
                 {
-                    parent = refPoint1,
+                    parent = midPoint,
                     localPosition = Vector3.zero
                 }
             };
-            refPoint2 = go2.transform;
+            renderTransform = go2.transform;
 
             // R16G16B16_SFloat is known to work on OpenGL Linux
             var rt = new RenderTexture(1, (int)(MaxLength/width), 0, GraphicsFormat.R16G16B16_SFloat, 0);
             RenderTexture.active = rt;
             GL.Clear(false, true, Color.white);
             RenderTexture.active = null;
-
             texture = rt;
-            
-            if (Application.isEditor)
-            {   
-                // visualize
-                var c = go.AddComponent<BoxCollider>();
-                c.size = Vector3.one * width;
-            }
         }
 
         // Do not show this overlay until there's an actual hit
-        protected override IEnumerator AfterEnable()
+        protected override IEnumerator FirstShow()
         {
             yield break;
         }
@@ -117,86 +114,56 @@ namespace EasyOverlay
                 Show();
 
             // forward is backwards for some reason
-            var dirToHmd = (refPoint2.transform.position - manager.hmd.position).normalized;
-            refPoint2.rotation = Quaternion.LookRotation(dirToHmd, refPoint2.parent.up);
+            var dirToHmd = (renderTransform.transform.position - manager.hmd.position).normalized;
+            renderTransform.rotation = Quaternion.LookRotation(dirToHmd, renderTransform.parent.up);
             // rotate around Y towards hmd
-            refPoint2.localEulerAngles = new Vector3(0, refPoint2.localEulerAngles.y, 0);
+            renderTransform.localEulerAngles = new Vector3(0, renderTransform.localEulerAngles.y, 0);
 
             length = len;
-            refPoint1.localPosition = new Vector3(0, 0, length / 2);
+            midPoint.localPosition = new Vector3(0, 0, length / 2);
 
             if (wantCursor)
             {
                 // set cursor
                 var cursorT = cursor.transform;
-                var adjustedUv = (p.nativeUv + new Vector2(-0.5f, -0.5f)) * p.overlay.width;
-                adjustedUv += new Vector2(cursor.width / 2f, -cursor.width / 2f);
-                var screenTransform = p.overlay.transform;
-                cursorT.position = screenTransform.TransformPoint(adjustedUv.x, adjustedUv.y, 0.001f);
-                cursorT.rotation = Quaternion.LookRotation(screenTransform.forward);
+                cursorT.position = p.point + new Vector3(0.5f, -0.5f, 0) * cursor.width;
+                cursorT.rotation = Quaternion.LookRotation(dirToHmd);
                 if (!cursor.visible)
                     cursor.Show();
+                cursor.UploadPositionAbsolute();
             }
             else if (cursor.visible) 
                 cursor.Hide();
 
             color = modifier switch
             {
-                PointerModifier.None when primary => leftClickColor,
-                PointerModifier.RightClick when primary => rightClickColor,
-                PointerModifier.RightClick when !primary => rightClickColorDiminished,
-                PointerModifier.MiddleClick when primary => middleClickColor,
-                PointerModifier.MiddleClick when !primary => middleClickColorDiminished,
-                _ => leftClickColorDiminished
+                PointerModifier.None when primary => LeftClickColor,
+                PointerModifier.RightClick when primary => RightClickColor,
+                PointerModifier.RightClick => RightClickColorDiminished,
+                PointerModifier.MiddleClick when primary => MiddleClickColor,
+                PointerModifier.MiddleClick => MiddleClickColorDiminished,
+                PointerModifier.Neutral => NeutralColor,
+                _ => LeftClickColorDiminished
             };
         }
-
-        // Runs after waitForEndOfFrame
-        public override bool Render()
+        
+        protected internal override void BeforeRender()
         {
             if (!wasIntersectedThisFrame)
             {
                 if (visible) Hide();
                 if (cursor.visible) cursor.Hide();
-                return false;
+                return;
             }
 
-            wasIntersectedThisFrame = false;
-
-            if (handle == OpenVR.k_ulOverlayHandleInvalid || !visible)
-                return false;
-
-            overlay.SetOverlaySortOrder(handle, zOrder);
-            overlay.SetOverlayWidthInMeters(handle, width);
+            UploadPositionAbsolute(renderTransform);
+            UploadBounds(0, 1, 0, length/MaxLength);
+            UploadColor(color);
             
-            var t = new SteamVR_Utils.RigidTransform(refPoint2);
-            var matrix = t.ToHmdMatrix34();
-            overlay.SetOverlayTransformAbsolute(handle, SteamVR.settings.trackingSpace, ref matrix);
-
-            var bounds = new VRTextureBounds_t
-            {
-                uMin = 0,
-                uMax = 1,
-                vMin = 0,
-                vMax = length / MaxLength
-            };
-
-            overlay.SetOverlayTextureBounds(handle, ref bounds);
-
-            overlay.SetOverlayColor(handle, color.r, color.g, color.b);
-
-            UploadTexture();
-            return true;
+            wasIntersectedThisFrame = false;
         }
 
         // Helper methods below
-        
-        private void SetColor(Color c)
-        {
-            RenderTexture.active = (RenderTexture) texture;
-            GL.Clear(false, true, c);
-            RenderTexture.active = null;
-        }
         
         private PointerModifier RecalculateModifier()
         {
@@ -207,8 +174,8 @@ namespace EasyOverlay
 
             return dot switch
             {
-                > 0.5f => PointerModifier.MiddleClick,
-                < -0.35f => PointerModifier.RightClick,
+                > 0.8f => PointerModifier.MiddleClick,
+                < -0.5f => PointerModifier.RightClick,
                 _ => PointerModifier.None
             };
         }
@@ -224,6 +191,7 @@ namespace EasyOverlay
     {
         None,
         RightClick,
-        MiddleClick
+        MiddleClick,
+        Neutral
     }
 }

@@ -1,4 +1,4 @@
-namespace EasyOverlay
+namespace EasyOverlay.Overlay
 {
     /// <summary>
     /// Compatible with libopenvr_api tracked device constants.

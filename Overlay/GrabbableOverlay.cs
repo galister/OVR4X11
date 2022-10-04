@@ -1,11 +1,11 @@
 using UnityEngine;
 
-namespace EasyOverlay
+namespace EasyOverlay.Overlay
 {
     /// <summary>
     /// An overlay that exists in world space and can be grabbed using the pointers
     /// </summary>
-    public abstract class GrabbableOverlay : ClickableOverlay
+    public abstract class GrabbableOverlay : InteractableOverlay
     {
         /// <summary>
         /// Where to spawn after just being shown.
@@ -24,17 +24,10 @@ namespace EasyOverlay
             base.Show();
         }
 
-        // TODO protected override void OnMove(PointerHit pointer, bool primary);
-        // What for?
-
         protected override bool OnGrabbed(PointerHit pointer)
         {
-            if (!grabbed)
-            {
-                transform.parent = manager.GetController(pointer.device).transform;
-                grabbed = true;
-            }
-
+            transform.parent = pointer.pointer.transform;
+            grabbed = true;
             return true;
         }
 
@@ -51,27 +44,29 @@ namespace EasyOverlay
             if (!grabbed) return false;
 
             if (pointer.modifier == PointerModifier.RightClick)
+            {
                 width = Mathf.Clamp(width - Mathf.Pow(value, 3) * 2, 0.1f, 5f);
+                UploadWidth();
+            }
             else if (pointer.modifier == PointerModifier.MiddleClick)
                 return true; // TODO curving
             else
+            {
                 transform.localPosition += Vector3.forward * (Mathf.Pow(value, 3) * 2);
-            
+            }
+
             return true;
         }
-
+        
         protected override bool OnDropped(PointerHit pointer)
         {
-            if (grabbed)
-            {
-                var t = transform;
-                grabbed = false;
+            var t = transform;
+            grabbed = false;
 
-                if (t.parent != manager.transform)
-                {
-                    referencePoint = t.localPosition;
-                    t.parent = manager.transform;
-                }
+            if (t.parent != manager.transform)
+            {
+                referencePoint = t.localPosition;
+                t.parent = manager.transform;
             }
             return true;
         }
