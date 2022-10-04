@@ -15,20 +15,20 @@ namespace EasyOverlay.X11Keyboard
         public string[][] main_layout;
         public string[][] alt_layout;
         public Dictionary<string, string[]> exec_commands;
-        public Dictionary<string, string> display;
+        public Dictionary<string, string> labels;
         public Dictionary<string, string> macros;
         public Dictionary<string, int> keycodes = new();
 
         public string NameOfKey(string key, bool shift = false)
         {
-            if (display.TryGetValue(key, out name))
+            if (labels.TryGetValue(key, out name))
                 return name;
+            
+            if (key.StartsWith("KP_"))
+                key = key[3..];
             
             if (key.Contains("_"))
                 key = key.Split('_').First();
-
-            if (key.StartsWith("KP_"))
-                key = key[3..];
 
             return Char.ToUpperInvariant(key[0]) + key[1..].ToLowerInvariant();
         }

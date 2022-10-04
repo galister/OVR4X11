@@ -47,7 +47,7 @@ namespace EasyOverlay.X11Keyboard
                 ["KILL"] = "Super_L DOWN, Control_L DOWN, Escape, Control_L UP, Super_L UP"
             };
 
-            display = new Dictionary<string, string>
+            labels = new Dictionary<string, string>
             {
                 ["1"] = "1\n    !",
                 ["2"] = "2\n    @",
