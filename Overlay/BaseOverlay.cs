@@ -45,11 +45,18 @@ namespace EasyOverlay.Overlay
         [Tooltip("(ReadOnly) Returns true if being rendered.")]
         public bool visible { get; private set; }
 
-        protected virtual void Start()
+        private void Awake()
         {
-            manager = FindObjectOfType<OverlayManager>();
+            manager = OverlayManager.instance;
             manager.RegisterWindow(this);
         }
+
+        private void OnDestroy()
+        {
+            manager.UnregisterWindow(this);
+        }
+
+        protected virtual void Start() { }
 
         protected virtual void Update() { }
 
@@ -147,7 +154,10 @@ namespace EasyOverlay.Overlay
         internal void Render()
         {
             if (handle == OpenVR.k_ulOverlayHandleInvalid || !visible)
+            {
+                renderActions.Clear();
                 return;
+            }
 
             foreach (var action in renderActions) 
                 action();

@@ -21,6 +21,7 @@ namespace EasyOverlay.X11Screen
             cap?.Tick();
             
             var mouse = cap.GetMousePosition();
+            var cursor = manager.desktopCursor;
             
             if (mouse.x >= 0 && mouse.x < texture.width
                              && mouse.y >= 0 && mouse.y < texture.height)
@@ -28,26 +29,26 @@ namespace EasyOverlay.X11Screen
                 var point = new Vector2(mouse.x / (float)texture.width, (texture.height-mouse.y) / (float)texture.height);
                 point += new Vector2(-0.5f, -0.5f);
                 point *= new Vector2(width, width * activeRatio.y);
-                point += new Vector2(manager.desktopCursor.width / 2f, -manager.desktopCursor.width / 2f);
+                point += new Vector2(cursor.width / 2f, -cursor.width / 2f);
                 point /= new Vector2(transform.localScale.x, transform.localScale.y);
                 
-                var cursorT = manager.desktopCursor.transform;
+                var cursorT = cursor.transform;
                 var screenTransform = transform;
                 cursorT.position = screenTransform.TransformPoint(point.x, point.y, 0.001f);
                 cursorT.rotation = Quaternion.LookRotation(screenTransform.forward);
 
-                if (manager.desktopCursor.owner != this)
+                if (cursor.owner != this)
                 {
-                    manager.desktopCursor.owner = this;
-                    if (!manager.desktopCursor.visible)
-                        manager.desktopCursor.Show();
+                    cursor.owner = this;
+                    if (!cursor.visible)
+                        cursor.Show();
                 }
-                manager.desktopCursor.UploadPositionAbsolute();
+                cursor.UploadPositionAbsolute();
             }
-            else if (manager.desktopCursor.owner == this)
+            else if (cursor.owner == this)
             {
-                manager.desktopCursor.Hide();
-                manager.desktopCursor.owner = null;
+                cursor.Hide();
+                cursor.owner = null;
             }
             
             UploadTexture();
@@ -151,6 +152,9 @@ namespace EasyOverlay.X11Screen
 
         protected override void DrawPointer(PointerHit p, bool primary)
         {
+            if (!primary)
+                p.modifier = PointerModifier.Neutral;
+            
             p.pointer.OnIntersected(p, primary, false);
         }
     }

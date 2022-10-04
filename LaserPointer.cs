@@ -73,7 +73,7 @@ namespace EasyOverlay
             renderTransform = go2.transform;
 
             // R16G16B16_SFloat is known to work on OpenGL Linux
-            var rt = new RenderTexture(1, (int)(MaxLength/width), 0, GraphicsFormat.R16G16B16_SFloat, 0);
+            var rt = new RenderTexture(1, (int)(MaxLength/width), 0, OverlayManager.GraphicsFormat, 0);
             RenderTexture.active = rt;
             GL.Clear(false, true, Color.white);
             RenderTexture.active = null;

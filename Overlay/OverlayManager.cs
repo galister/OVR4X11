@@ -1,15 +1,17 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using Valve.VR;
 
 namespace EasyOverlay.Overlay
 {
     public class OverlayManager : MonoBehaviour
     {
-        internal const int raycastLayer = 8;
-        private const int RaycastMask = 1 << raycastLayer;
+        public static readonly GraphicsFormat GraphicsFormat = GraphicsFormat.R8G8B8A8_SRGB;
+        public static OverlayManager instance;
         
         private const string ActionSet = "default";
         private const string ShowHideAction = "ShowHide";
@@ -27,6 +29,13 @@ namespace EasyOverlay.Overlay
         [SerializeField] 
         public BaseOverlay desktopCursor;
 
+        public OverlayManager()
+        {
+            if (instance != null)
+                throw new ApplicationException("Can't have more than one OverlayManager!");
+            instance = this;
+        }
+        
         private void Start()
         {
             StartCoroutine(Render());
@@ -40,6 +49,11 @@ namespace EasyOverlay.Overlay
         public void RegisterWindow(BaseOverlay o)
         {
             overlays.Add(o);
+        }
+        
+        public void UnregisterWindow(BaseOverlay o)
+        {
+            overlays.Remove(o);
         }
 
         public void RegisterPointer(LaserPointer o, TrackedDevice hand)

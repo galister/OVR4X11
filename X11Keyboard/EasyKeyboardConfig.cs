@@ -33,7 +33,7 @@ namespace EasyOverlay.X11Keyboard
             return Char.ToUpperInvariant(key[0]) + key[1..].ToLowerInvariant();
         }
 
-        private static readonly Regex macroRx = new Regex(@"([A-Za-z0-1_-]+)(?: (UP|DOWN))?;?", RegexOptions.Compiled);
+        private static readonly Regex macroRx = new(@"([A-Za-z0-1_-]+)(?: (UP|DOWN))?;?", RegexOptions.Compiled);
         public List<(int, bool)> KeyEventsFromMacro(string s)
         {
             var l = new List<(int, bool)>();
