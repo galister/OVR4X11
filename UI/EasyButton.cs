@@ -6,13 +6,10 @@ namespace EasyOverlay.UI
 {
     public class EasyButton : MonoBehaviour
     {
-        [SerializeField]
-        public string field;
-
         private void Awake()
         {
             var map = gameObject.GetComponentInParent<EasyUiManager>();
-            map.Register(field, GetComponent<Button>());
+            map.Register(gameObject.name, GetComponent<Button>());
         }
     }
 }
