@@ -36,6 +36,8 @@ namespace EasyOverlay
         private static readonly Color NeutralColor = new(0xA0, 0xA0, 0xA0, 0x80);
         
         private bool wasIntersectedThisFrame;
+
+        private static Texture2D sharedTexture;
         
         private Transform midPoint;
         private Transform renderTransform;
@@ -72,12 +74,15 @@ namespace EasyOverlay
             };
             renderTransform = go2.transform;
 
-            // R16G16B16_SFloat is known to work on OpenGL Linux
-            var rt = new RenderTexture(1, (int)(MaxLength/width), 0, OverlayManager.GraphicsFormat, 0);
-            RenderTexture.active = rt;
-            GL.Clear(false, true, Color.white);
-            RenderTexture.active = null;
-            texture = rt;
+            if (sharedTexture == null)
+            {
+                sharedTexture = new Texture2D(1, (int)(MaxLength / width), GraphicsFormat.R8G8B8A8_SRGB, 0,
+                    TextureCreationFlags.None);
+
+                for (var i = 0; i < sharedTexture.height; i++) sharedTexture.SetPixel(0, i, Color.white);
+            }
+
+            texture = sharedTexture;
         }
 
         // Do not show this overlay until there's an actual hit
@@ -126,8 +131,8 @@ namespace EasyOverlay
             {
                 // set cursor
                 var cursorT = cursor.transform;
-                cursorT.position = p.point + new Vector3(0.5f, -0.5f, 0) * cursor.width;
-                cursorT.rotation = Quaternion.LookRotation(dirToHmd);
+                cursorT.position = p.point + new Vector3(0.5f, -1f, 0) * cursor.width;
+                cursorT.rotation = Quaternion.LookRotation(p.overlay.transform.forward);
                 if (!cursor.visible)
                     cursor.Show();
                 cursor.UploadPositionAbsolute();

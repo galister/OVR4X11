@@ -10,6 +10,7 @@ namespace EasyOverlay.Overlay
         /// <summary>
         /// Where to spawn after just being shown.
         /// </summary>
+        
         private Vector3 referencePoint;
         private bool grabbed;
 
@@ -65,7 +66,7 @@ namespace EasyOverlay.Overlay
 
             if (t.parent != manager.transform)
             {
-                referencePoint = t.localPosition;
+                referencePoint = manager.spawn.InverseTransformPoint(t.position);
                 t.parent = manager.transform;
             }
             return true;

@@ -91,7 +91,7 @@ namespace EasyOverlay.Overlay
         /// </summary>
         protected virtual void DrawPointer(PointerHit p, bool primary)
         {
-            p.pointer.OnIntersected(p, primary, true);
+            p.pointer.OnIntersected(p, primary, false);
         }
         
         /// <summary>

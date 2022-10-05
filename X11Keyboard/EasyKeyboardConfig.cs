@@ -23,7 +23,10 @@ namespace EasyOverlay.X11Keyboard
         {
             if (labels.TryGetValue(key, out name))
                 return name;
-            
+
+            if (key.Length == 1)
+                return shift ? key.ToUpperInvariant() : key.ToLowerInvariant();
+
             if (key.StartsWith("KP_"))
                 key = key[3..];
             

@@ -50,8 +50,6 @@ namespace EasyOverlay.X11Screen
                 cursor.Hide();
                 cursor.owner = null;
             }
-
-            textureDirty = true;
         }
         
         protected override void OnEnable()
@@ -152,9 +150,6 @@ namespace EasyOverlay.X11Screen
 
         protected override void DrawPointer(PointerHit p, bool primary)
         {
-            if (!primary)
-                p.modifier = PointerModifier.Neutral;
-            
             p.pointer.OnIntersected(p, primary, false);
         }
     }

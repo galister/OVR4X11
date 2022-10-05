@@ -28,7 +28,7 @@ namespace EasyOverlay.X11Screen.Interop
             
             internalTexture = new Texture2D(size.x, size.y, TextureFormat.BGRA32, false);
 
-            texture = new RenderTexture(size.x, size.y, 0, OverlayManager.GraphicsFormat, 0);
+            texture = new RenderTexture(size.x, size.y, 0, GraphicsFormat.R16G16B16_SFloat, 0);
             texture.filterMode = FilterMode.Trilinear;
             texture.anisoLevel = 9;
         }

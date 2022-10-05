@@ -82,7 +82,6 @@ namespace EasyOverlay
             {
                 // already displaying something
                 StopCoroutine(coroutine);
-                textureDirty = true;
             }
             else
                 Show();

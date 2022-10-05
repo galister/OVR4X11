@@ -10,7 +10,6 @@ namespace EasyOverlay.Overlay
 {
     public class OverlayManager : MonoBehaviour
     {
-        public static readonly GraphicsFormat GraphicsFormat = GraphicsFormat.R16G16B16_SFloat;
         public static OverlayManager instance;
         
         private const string ActionSet = "default";
@@ -135,8 +134,9 @@ namespace EasyOverlay.Overlay
             showHidePressed = true;
             
             windowsVisible = !windowsVisible;
-            foreach (var overlay in overlays.Where(x => x.showHideBinding)) 
-                overlay.gameObject.SetActive(windowsVisible);
+            foreach (var overlay in overlays.Where(x => x.showHideBinding))
+                if (!windowsVisible || overlay.wantVisible)
+                    overlay.gameObject.SetActive(windowsVisible);
         }
 
         private void OnDisable()

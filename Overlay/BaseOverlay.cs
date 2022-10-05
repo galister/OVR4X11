@@ -34,6 +34,9 @@ namespace EasyOverlay.Overlay
         public bool showHideBinding = true;
 
         [SerializeField]
+        public bool wantVisible;
+
+        [SerializeField]
         public uint zOrder;
 
         [DoNotSerialize]
@@ -44,8 +47,6 @@ namespace EasyOverlay.Overlay
 
         [Tooltip("(ReadOnly) Returns true if being rendered.")]
         public bool visible { get; private set; }
-
-        protected bool textureDirty = true;
 
         private void Awake()
         {
@@ -85,7 +86,7 @@ namespace EasyOverlay.Overlay
             
             overlay.SetOverlaySortOrder(handle, zOrder);
             UploadWidth();
-            textureDirty = true;
+            UploadTexture();
             visible = true;
         }
 
@@ -157,10 +158,9 @@ namespace EasyOverlay.Overlay
             if (transformUpdateMode == TransformUpdateMode.Automatic)
                 UploadPositionAbsolute();
 
-            if (textureDirty)
+            if (texture is RenderTexture)
             {
                 UploadTexture();
-                textureDirty = false;
             }
 
             return true;

@@ -79,7 +79,21 @@ namespace EasyOverlay.X11Keyboard
             uiCamera.enabled = false;
             base.OnDisable();
         }
-
+        
+        protected override void DrawPointer(PointerHit p, bool primary)
+        {
+            if (!primary)
+            {
+                var orig = p.modifier;
+                p.modifier = PointerModifier.Neutral;
+                p.pointer.OnIntersected(p, false, false);
+                p.modifier = orig;
+            }
+            else 
+                p.pointer.OnIntersected(p, true, false);
+            
+        }
+        
         protected override void OnPointerPromotion(PointerHit p) { } // don't switch primary pointers on click
 
         protected override bool OnMove(PointerHit pointer, bool primary)
@@ -93,8 +107,7 @@ namespace EasyOverlay.X11Keyboard
             var mint = (int)activeModifier;
             var layer = modifierLayerMap[mint];
             layer.OnMove(pointer);
-            textureDirty = true;
-            
+
             return true;
         }
 
@@ -108,8 +121,6 @@ namespace EasyOverlay.X11Keyboard
 
                 if (primaryPointer != null) 
                     HandleLayerChange(device, primaryPointer.modifier);
-
-                textureDirty = true;
             }
             return true;
         }
@@ -119,7 +130,6 @@ namespace EasyOverlay.X11Keyboard
             var mint = (int)activeModifier;
             var layer = modifierLayerMap[mint];
             layer.OnPressed(pointer);
-            textureDirty = true;
             return true;
         }
 
@@ -129,7 +139,6 @@ namespace EasyOverlay.X11Keyboard
             var mint = (int)activeModifier;
             var layer = modifierLayerMap[mint];
             layer.OnReleased(pointer);
-            textureDirty = true;
             return true;
         }
         

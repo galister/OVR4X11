@@ -89,8 +89,6 @@ namespace EasyOverlay
                     nextBatteryCheck = DateTime.UtcNow.AddSeconds(5);
                 }
             }
-
-            textureDirty = true;
         }
         
         private static readonly Color discharging = new(0, 0.7f, 0, 1);
@@ -200,6 +198,7 @@ namespace EasyOverlay
                 {
                     var go = KeyboardOverlay.instance.gameObject;
                     go.SetActive(!go.activeSelf);
+                    KeyboardOverlay.instance.wantVisible = go.activeSelf;
                 });
 
 
@@ -207,15 +206,16 @@ namespace EasyOverlay
             for (; i < screens.Length; i++)
             {
                 var i1 = i;
-                SetupScreenButton(ui.GetButton($"screen{i+1}"), true, () =>
+                SetupScreenButton(ui.GetButton($"screen{i}"), true, () =>
                 {
                     var go = screens[i1].gameObject;
                     go.SetActive(!go.activeSelf);
+                    screens[i1].wantVisible = go.activeSelf;
                 });
             }
 
             for (; i < 3; i++)
-                SetupScreenButton(ui.GetButton($"screen{i+1}"), false, null);
+                SetupScreenButton(ui.GetButton($"screen{i}"), false, null);
         }
 
         private void SetupScreenButton(Button b, bool active, Action clickAction)
