@@ -50,8 +50,8 @@ namespace EasyOverlay.X11Screen
                 cursor.Hide();
                 cursor.owner = null;
             }
-            
-            UploadTexture();
+
+            textureDirty = true;
         }
         
         protected override void OnEnable()

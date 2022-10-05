@@ -63,7 +63,7 @@ namespace EasyOverlay.Overlay
             meshCollider.sharedMesh = mesh;
         }
 
-        protected override void UploadWidth()
+        protected internal override void UploadWidth()
         {
             if (referenceWidth != 0)
                 transform.localScale = Vector3.one * (width / referenceWidth);

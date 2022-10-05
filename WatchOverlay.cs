@@ -27,7 +27,7 @@ namespace EasyOverlay
         private TimeZoneInfo altTz;
         private TimeZoneInfo altTz2;
 
-        private int maxDevices = 10;
+        private const int MaxDevices = 10;
         private float[] batteryStates;
         private bool[] chargeStates;
 
@@ -89,8 +89,8 @@ namespace EasyOverlay
                     nextBatteryCheck = DateTime.UtcNow.AddSeconds(5);
                 }
             }
-            
-            UploadTexture();
+
+            textureDirty = true;
         }
         
         private static readonly Color discharging = new(0, 0.7f, 0, 1);
@@ -109,7 +109,7 @@ namespace EasyOverlay
                     : Color.Lerp(critical, discharging, batteryStates[i] + 0.4f);
             }
 
-            for (var i = batteryStates.Length; i < maxDevices; i++) 
+            for (var i = batteryStates.Length; i < MaxDevices; i++) 
                 ui.GetTextField($"b{i}").color = inactive;
         }
 
@@ -196,7 +196,11 @@ namespace EasyOverlay
 
             var keyboardButton = ui.GetButton("keyboard");
             ui.layer.AddButton(keyboardButton,
-                () => { KeyboardOverlay.instance.enabled = !KeyboardOverlay.instance.enabled; });
+                () =>
+                {
+                    var go = KeyboardOverlay.instance.gameObject;
+                    go.SetActive(!go.activeSelf);
+                });
 
 
             var i = 0;
@@ -205,10 +209,8 @@ namespace EasyOverlay
                 var i1 = i;
                 SetupScreenButton(ui.GetButton($"screen{i+1}"), true, () =>
                 {
-                    if (screens[i1].visible)
-                        screens[i1].Hide();
-                    else
-                        screens[i1].Show();
+                    var go = screens[i1].gameObject;
+                    go.SetActive(!go.activeSelf);
                 });
             }
 

@@ -44,8 +44,6 @@ namespace EasyOverlay.X11Keyboard
         private PointerModifier activeModifier;
         private readonly ButtonIntermediateLayer[] modifierLayerMap = new ButtonIntermediateLayer[3];
 
-        private bool dirty = true;
-
         public KeyboardOverlay()
         {
             if (instance != null)
@@ -82,13 +80,6 @@ namespace EasyOverlay.X11Keyboard
             base.OnDisable();
         }
 
-        protected internal override void BeforeRender()
-        {
-            if (dirty)
-                UploadTexture();
-            dirty = false;
-        }
-
         protected override void OnPointerPromotion(PointerHit p) { } // don't switch primary pointers on click
 
         protected override bool OnMove(PointerHit pointer, bool primary)
@@ -102,7 +93,7 @@ namespace EasyOverlay.X11Keyboard
             var mint = (int)activeModifier;
             var layer = modifierLayerMap[mint];
             layer.OnMove(pointer);
-            dirty = true;
+            textureDirty = true;
             
             return true;
         }
@@ -118,7 +109,7 @@ namespace EasyOverlay.X11Keyboard
                 if (primaryPointer != null) 
                     HandleLayerChange(device, primaryPointer.modifier);
 
-                dirty = true;
+                textureDirty = true;
             }
             return true;
         }
@@ -128,7 +119,7 @@ namespace EasyOverlay.X11Keyboard
             var mint = (int)activeModifier;
             var layer = modifierLayerMap[mint];
             layer.OnPressed(pointer);
-            dirty = true;
+            textureDirty = true;
             return true;
         }
 
@@ -138,7 +129,7 @@ namespace EasyOverlay.X11Keyboard
             var mint = (int)activeModifier;
             var layer = modifierLayerMap[mint];
             layer.OnReleased(pointer);
-            dirty = true;
+            textureDirty = true;
             return true;
         }
         

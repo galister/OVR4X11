@@ -45,6 +45,8 @@ namespace EasyOverlay.Overlay
         [Tooltip("(ReadOnly) Returns true if being rendered.")]
         public bool visible { get; private set; }
 
+        protected bool textureDirty = true;
+
         private void Awake()
         {
             manager = OverlayManager.instance;
@@ -145,27 +147,24 @@ namespace EasyOverlay.Overlay
 
         #region OpenVR Rendering
         
-        private readonly Queue<Action> renderActions = new();
-        private TrackedDevice relativeDevice;
-        
         /// <summary>
         /// Uploads changes to OpenVR. This is called by the OverlayManager instance.
         /// </summary>
-        internal void Render()
+        protected internal virtual bool Render()
         {
             if (handle == OpenVR.k_ulOverlayHandleInvalid || !visible)
-            {
-                renderActions.Clear();
-                return;
-            }
-
-            foreach (var action in renderActions) 
-                action();
+                return false;
             
             if (transformUpdateMode == TransformUpdateMode.Automatic)
-                DoUploadPositionAbsolute();
+                UploadPositionAbsolute();
 
-            renderActions.Clear();
+            if (textureDirty)
+            {
+                UploadTexture();
+                textureDirty = false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -182,80 +181,32 @@ namespace EasyOverlay.Overlay
 
             handle = OpenVR.k_ulOverlayHandleInvalid;
         }
-
-        /// <summary>
-        /// Will upload the width at the end of this frame.
-        /// </summary>
-        protected virtual void UploadWidth()
-        {
-            renderActions.Enqueue(DoUploadWidth);
-        }
-
-        /// <summary>
-        /// Will upload the absolute position at the end of this frame.
-        /// </summary>
-        protected internal void UploadPositionAbsolute()
-        {
-            relativeDevice = TrackedDevice.None;
-            renderActions.Enqueue(DoUploadPositionAbsolute);
-        }
-        
-        protected void UploadPositionAbsolute(Transform t)
-        {
-            relativeDevice = TrackedDevice.None;
-            renderActions.Enqueue(() => DoUploadPositionAbsolute(t));
-        }
-        
-        protected void UploadPositionRelative(TrackedDevice d)
-        {
-            relativeDevice = d;
-            transformUpdateMode = TransformUpdateMode.Manual;
-            renderActions.Enqueue(DoUploadPositionRelative);
-        }
-        
-        protected void UploadColor(Color c)
-        {
-            renderActions.Enqueue(() => DoUploadColor(c));
-        }
-        
-        protected void UploadBounds(float uMin, float uMax, float vMin, float vMax)
-        {
-            renderActions.Enqueue(() => DoUploadBounds(uMin, uMax, vMin, vMax));
-        }
-        
-        /// <summary>
-        /// Will upload the texture at the end of this frame.
-        /// </summary>
-        protected void UploadTexture()
-        {
-            renderActions.Enqueue(DoUploadTexture);
-        }
         
         // Actual implementations below
-        
-        private void DoUploadWidth()
+        protected internal virtual void UploadWidth()
         {
             overlay.SetOverlayWidthInMeters(handle, width);
         }
 
-        private void DoUploadPositionAbsolute()
+        protected internal void UploadPositionAbsolute()
         {
             var matrix = new SteamVR_Utils.RigidTransform(transform).ToHmdMatrix34();
             overlay.SetOverlayTransformAbsolute(handle, SteamVR.settings.trackingSpace, ref matrix);
         }
         
-        private void DoUploadPositionAbsolute(Transform t)
+        protected internal void UploadPositionAbsolute(Transform t)
         {
             var matrix = new SteamVR_Utils.RigidTransform(t).ToHmdMatrix34();
             overlay.SetOverlayTransformAbsolute(handle, SteamVR.settings.trackingSpace, ref matrix);
         }
-        private void DoUploadPositionRelative()
+
+        protected internal void UploadPositionRelative(TrackedDevice device)
         {
             var matrix = new SteamVR_Utils.RigidTransform(transform.localPosition, transform.localRotation).ToHmdMatrix34();
-            overlay.SetOverlayTransformTrackedDeviceRelative(handle, (uint) relativeDevice, ref matrix);
+            overlay.SetOverlayTransformTrackedDeviceRelative(handle, (uint) device, ref matrix);
         }
         
-        private void DoUploadTexture()
+        private void UploadTexture()
         {
             var tex = new Texture_t
             {
@@ -267,12 +218,12 @@ namespace EasyOverlay.Overlay
             overlay.SetOverlayTexture(handle, ref tex);
         }
 
-        private void DoUploadColor(Color c)
+        protected void UploadColor(Color c)
         {
             overlay.SetOverlayColor(handle, c.r, c.g, c.b);
         }
 
-        private void DoUploadBounds(float uMin, float uMax, float vMin, float vMax)
+        protected void UploadBounds(float uMin, float uMax, float vMin, float vMax)
         {
             var bounds = new VRTextureBounds_t
             {

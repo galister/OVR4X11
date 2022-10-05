@@ -69,7 +69,7 @@ namespace EasyOverlay.Overlay
             {
                 yield return waitForEndOfFrame;
 
-                foreach (var o in overlays.Where(o => o.enabled))
+                foreach (var o in overlays.Where(o => o.isActiveAndEnabled && o.visible))
                 {
                     o.BeforeRender();
                     o.Render();
@@ -136,7 +136,7 @@ namespace EasyOverlay.Overlay
             
             windowsVisible = !windowsVisible;
             foreach (var overlay in overlays.Where(x => x.showHideBinding)) 
-                overlay.enabled = windowsVisible;
+                overlay.gameObject.SetActive(windowsVisible);
         }
 
         private void OnDisable()

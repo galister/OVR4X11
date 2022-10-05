@@ -26,7 +26,7 @@ namespace EasyOverlay
         private DateTime canReadAt = DateTime.MinValue;
         private NotificationsReceiver receiver;
         private Coroutine coroutine;
-        
+
         public Notifications()
         {
             if (instance != null)
@@ -82,7 +82,7 @@ namespace EasyOverlay
             {
                 // already displaying something
                 StopCoroutine(coroutine);
-                UploadTexture();
+                textureDirty = true;
             }
             else
                 Show();

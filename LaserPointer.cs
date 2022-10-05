@@ -147,20 +147,24 @@ namespace EasyOverlay
             };
         }
         
-        protected internal override void BeforeRender()
+        protected internal override bool Render()
         {
             if (!wasIntersectedThisFrame)
             {
                 if (visible) Hide();
                 if (cursor.visible) cursor.Hide();
-                return;
+                return false;
             }
+
+            if (!base.Render())
+                return false;
 
             UploadPositionAbsolute(renderTransform);
             UploadBounds(0, 1, 0, length/MaxLength);
             UploadColor(color);
             
             wasIntersectedThisFrame = false;
+            return true;
         }
 
         // Helper methods below
