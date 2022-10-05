@@ -85,8 +85,7 @@ namespace EasyOverlay.Overlay
             
             overlay.SetOverlaySortOrder(handle, zOrder);
             UploadWidth();
-            UploadTexture();
-            
+            textureDirty = true;
             visible = true;
         }
 

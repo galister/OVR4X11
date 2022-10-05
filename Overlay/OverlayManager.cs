@@ -10,7 +10,7 @@ namespace EasyOverlay.Overlay
 {
     public class OverlayManager : MonoBehaviour
     {
-        public static readonly GraphicsFormat GraphicsFormat = GraphicsFormat.R8G8B8A8_SRGB;
+        public static readonly GraphicsFormat GraphicsFormat = GraphicsFormat.R16G16B16_SFloat;
         public static OverlayManager instance;
         
         private const string ActionSet = "default";
