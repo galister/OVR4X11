@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using EasyOverlay.Overlay;
@@ -38,8 +39,10 @@ namespace EasyOverlay.X11Keyboard
         private readonly Color shiftLayoutColor = new(0xB0, 0x30, 0x00, 0x80);
         private readonly Color altLayoutColor = new(0x60, 0x00, 0x80, 0x80);
 
+        private HashSet<int> modifiers = new(8); 
+
         private float unitSize;
-        private int shiftCode;
+        private int[] shiftCodes = new int[2];
 
         private PointerModifier activeModifier;
         private readonly ButtonIntermediateLayer[] modifierLayerMap = new ButtonIntermediateLayer[3];
@@ -58,7 +61,8 @@ namespace EasyOverlay.X11Keyboard
             if (Config.LoadAndCheckConfig())
             {
                 BuildKeyboard();
-                shiftCode = Config.keycodes["Shift_R"];
+                shiftCodes[0] = Config.keycodes["Shift_L"];
+                shiftCodes[1] = Config.keycodes["Shift_R"];
                 modifierLayerMap[0] = mainLayer;
                 modifierLayerMap[1] = shiftLayer;
                 modifierLayerMap[2] = altLayer;
@@ -93,7 +97,7 @@ namespace EasyOverlay.X11Keyboard
                 p.pointer.OnIntersected(p, true, false);
             
         }
-        
+
         protected override void OnPointerPromotion(PointerHit p) { } // don't switch primary pointers on click
 
         protected override bool OnMove(PointerHit pointer, bool primary)
@@ -234,8 +238,16 @@ namespace EasyOverlay.X11Keyboard
 
             if (Config.keycodes.TryGetValue(keyStr, out var keycode))
             {
-                pressed = () => OnKeyPressed(keycode, shift);
-                released = () => OnKeyReleased(keycode, shift);
+                if (Config.modifiers.Contains(keycode))
+                {
+                    pressed = () => OnModifierPressed(keycode);
+                    released = () => OnModifierReleased(keycode);
+                }
+                else
+                {
+                    pressed = () => OnKeyPressed(keycode, shift);
+                    released = () => OnKeyReleased(keycode, shift);
+                }
             }
             else if (Config.macros.TryGetValue(keyStr, out var macro))
             {
@@ -270,33 +282,56 @@ namespace EasyOverlay.X11Keyboard
                 return;
             }
 
-            layer.AddButton(btn, x, y, w, h, pressed, released);
+            layer.AddButton(btn, x, y, w, h, pressed, released, keycode);
         }
 
+        private void OnModifierPressed(int keycode)
+        {
+            if (modifiers.Contains(keycode))
+                modifiers.Remove(keycode);
+            else
+                modifiers.Add(keycode);
+        }
+
+        private void OnModifierReleased(int keycode)
+        {
+            var state = modifiers.Contains(keycode);
+            foreach (var layer in modifierLayerMap)
+                layer.SetButtonStatus(keycode, state);
+        }
+        
         private void OnKeyPressed(int keycode, bool shift)
         {
             if (shift)
             {
-                XScreenCapture.SendKey(shiftCode, true);
-                XScreenCapture.SendKey(keycode, true);
+                modifiers.Remove(shiftCodes[0]);
+                modifiers.Add(shiftCodes[1]);
             }
-            else
-            {
-                XScreenCapture.SendKey(keycode, true);
-            }
+
+            foreach (var mod in modifiers)
+                XScreenCapture.SendKey(mod, true);
+            
+            XScreenCapture.SendKey(keycode, true);
         }
         
         private void OnKeyReleased(int keycode, bool shift)
         {
             if (shift)
             {
-                XScreenCapture.SendKey(keycode, false);
-                XScreenCapture.SendKey(shiftCode, false);
+                modifiers.Remove(shiftCodes[0]);
+                modifiers.Add(shiftCodes[1]);
             }
-            else
+            
+            XScreenCapture.SendKey(keycode, false);
+
+            foreach (var mod in modifiers)
             {
-                XScreenCapture.SendKey(keycode, false);
+                XScreenCapture.SendKey(mod, false);
+                
+                foreach (var layer in modifierLayerMap)
+                    layer.SetButtonStatus(mod, false);
             }
+            modifiers.Clear();
         }
         
         #endregion

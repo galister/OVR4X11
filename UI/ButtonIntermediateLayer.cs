@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using EasyOverlay.Overlay;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,6 +20,8 @@ namespace EasyOverlay.UI
 
         private readonly int[] litButtons = new int[2];
 
+        private readonly Dictionary<int, byte> keyCodeToBtnIdx = new();
+
         /// <summary>
         /// Call this when creating your UI
         /// </summary>
@@ -31,22 +34,26 @@ namespace EasyOverlay.UI
             uvToButtonMap = new byte[(int)width / ResDivider, (int)height / ResDivider];
         }
 
-        public void AddButton(Button b, Action onPressed, Action onReleased = null)
+        public void AddButton(Button b, Action pressed, Action released = null, int keyCode = 0)
         {
             var t = b.GetComponent<RectTransform>();
             var rectT = t.rect;
             var posT = t.anchoredPosition;
-            AddButton(b, posT.x, posT.y, rectT.width, rectT.height, onPressed, onReleased);
+            AddButton(b, posT.x, posT.y, rectT.width, rectT.height, pressed, released, keyCode);
         }
         
         /// <summary>
         /// Call this with Unity UI coordinates when adding buttons to your UI
         /// </summary>
-        public void AddButton(Button b, float x, float y, float w, float h, Action onPressed, Action onReleased)
+        public void AddButton(Button b, float x, float y, float w, float h, Action pressed, Action released, int keyCode = 0)
         {
             buttons[++nextButton] = b;
-            pressedActions[nextButton] = onPressed;
-            releasedActions[nextButton] = onReleased;
+            
+            pressedActions[nextButton] = pressed;
+            releasedActions[nextButton] = released;
+
+            if (keyCode > 0)
+                keyCodeToBtnIdx[keyCode] = nextButton;
             
             var xMin = (int)(x / ResDivider);
             var yMax = uvToButtonMap.GetLength(1) + (int)(y / ResDivider) - 1;
@@ -115,6 +122,17 @@ namespace EasyOverlay.UI
             
             button.OnDeselect(null);
             releasedActions[idx]?.Invoke();
+        }
+
+        public void SetButtonStatus(int keyCode, bool pressed)
+        {
+            if (!keyCodeToBtnIdx.TryGetValue(keyCode, out var btnIdx) 
+                || !ButtonFromIdx(btnIdx, out var b)) return;
+            
+            if (pressed)
+                b.OnSelect(null);
+            else
+                b.OnDeselect(null);
         }
 
         private bool IdxFromDevice(TrackedDevice device, out int idx)

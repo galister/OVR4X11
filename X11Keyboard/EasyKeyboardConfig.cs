@@ -18,6 +18,7 @@ namespace EasyOverlay.X11Keyboard
         public Dictionary<string, string> labels;
         public Dictionary<string, string> macros;
         public Dictionary<string, int> keycodes = new();
+        public HashSet<int> modifiers = new();
 
         public string NameOfKey(string key, bool shift = false)
         {
@@ -127,6 +128,15 @@ namespace EasyOverlay.X11Keyboard
                     }
                 }
             }
+            
+            modifiers.Clear();
+            foreach (var (key, code) in keycodes)
+            {
+                if (key.StartsWith("Control_") || key.StartsWith("Shift_") || key.StartsWith("Alt_") ||
+                    key.StartsWith("Meta_") || key.StartsWith("Super_"))
+                    modifiers.Add(code);
+            }
+            
             return true;
         }
 
