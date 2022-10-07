@@ -42,13 +42,13 @@ namespace EasyOverlay.Overlay
         [DoNotSerialize]
         public BaseOverlay owner;
 
-        private ulong handle = OpenVR.k_ulOverlayHandleInvalid;
-        private CVROverlay overlay;
-
         [Tooltip("(ReadOnly) Returns true if being rendered.")]
         public bool visible { get; private set; }
-
-        private void Awake()
+        
+        private ulong handle = OpenVR.k_ulOverlayHandleInvalid;
+        private CVROverlay overlay;
+        
+        protected virtual void Awake()
         {
             manager = OverlayManager.instance;
             manager.RegisterWindow(this);
@@ -84,9 +84,6 @@ namespace EasyOverlay.Overlay
                 return;
             }
             
-            overlay.SetOverlaySortOrder(handle, zOrder);
-            UploadWidth();
-            UploadTexture();
             visible = true;
         }
 
@@ -133,10 +130,16 @@ namespace EasyOverlay.Overlay
                 return;
             }
 
+            overlay.SetOverlaySortOrder(handle, zOrder);
+            UploadWidth();
+            
             if (texture == null)
                 Debug.Log($"Not showing {key} - Texture not set");
-            else 
+            else
+            {
+                UploadTexture();
                 StartCoroutine(FirstShow());
+            }
         }
 
         protected virtual IEnumerator FirstShow()
@@ -146,7 +149,7 @@ namespace EasyOverlay.Overlay
         }
 
         #region OpenVR Rendering
-        
+
         /// <summary>
         /// Uploads changes to OpenVR. This is called by the OverlayManager instance.
         /// </summary>
@@ -154,14 +157,15 @@ namespace EasyOverlay.Overlay
         {
             if (handle == OpenVR.k_ulOverlayHandleInvalid || !visible)
                 return false;
-            
+
             if (transformUpdateMode == TransformUpdateMode.Automatic)
                 UploadPositionAbsolute();
-
+            
+            // Uploading render textures on-demand causes steamvr to crash with
+            // `failed to create shared Vulkan image`. Uploading the texture
+            // on every frame fixes this.
             if (texture is RenderTexture)
-            {
                 UploadTexture();
-            }
 
             return true;
         }
@@ -205,6 +209,13 @@ namespace EasyOverlay.Overlay
             overlay.SetOverlayTransformTrackedDeviceRelative(handle, (uint) device, ref matrix);
         }
         
+        /// <summary>
+        /// <b>DANGER</b> SteamVR can segfault when uploading textures on-demand.
+        /// <br/><br/>
+        /// For textures that don't change at all over time: Upload once, right after the overlay is created, before show.
+        /// <br/><br/>
+        /// For textures that will change over time: Upload on every frame, regardless if the texture has changed or not.
+        /// </summary>
         private void UploadTexture()
         {
             var tex = new Texture_t

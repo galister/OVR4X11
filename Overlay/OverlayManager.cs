@@ -19,8 +19,8 @@ namespace EasyOverlay.Overlay
 
         [SerializeField] public Transform spawn;
 
-        private readonly LaserPointer[] controllers = new LaserPointer[2];
-        private readonly List<BaseOverlay> overlays = new();
+        private readonly List<LaserPointer> controllers = new(2);
+        private readonly List<BaseOverlay> overlays = new(10);
 
         [SerializeField] public bool windowsVisible;
         private bool showHidePressed = false;
@@ -55,9 +55,9 @@ namespace EasyOverlay.Overlay
             overlays.Remove(o);
         }
 
-        public void RegisterPointer(LaserPointer o, TrackedDevice hand)
+        public void RegisterPointer(LaserPointer ptr, TrackedDevice hand)
         {
-            controllers[(int)hand-1] = o;
+            controllers.Add(ptr);
         }
 
         private readonly WaitForEndOfFrame waitForEndOfFrame = new();

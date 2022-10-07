@@ -8,7 +8,6 @@ using EasyOverlay.Overlay;
 using EasyOverlay.UI;
 using EasyOverlay.X11Keyboard;
 using EasyOverlay.X11Screen;
-using EasyOverlay.X11Screen.Interop;
 using Valve.VR;
 
 namespace EasyOverlay

@@ -42,14 +42,9 @@ namespace EasyOverlay
         private Transform midPoint;
         private Transform renderTransform;
 
-        protected override void Start()
+        protected override void Awake()
         {
-            base.Start();
-            manager.RegisterPointer(this, trackedDevice);
-            width = 0.002f;
-            showHideBinding = false;
-
-            cursor.owner = this;
+            base.Awake();
             
             var go = new GameObject
             {
@@ -83,6 +78,16 @@ namespace EasyOverlay
             }
 
             texture = sharedTexture;
+        }
+
+        protected override void Start()
+        {
+            base.Start();
+            manager.RegisterPointer(this, trackedDevice);
+            width = 0.002f;
+            showHideBinding = false;
+
+            cursor.owner = this;
         }
 
         // Do not show this overlay until there's an actual hit
