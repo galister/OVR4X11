@@ -5,6 +5,8 @@ It's implemented using Unity and Xshm -- allows showing screens only, no individ
 
 Keyboard included with 2-hand typing support.
 
+The source for the native library can be found here: https://github.com/galister/xshm-cap
+
 # Requirements
 
 The following libraries are needed:
@@ -45,6 +47,13 @@ The pointer changes mode depending on the orientation:
 - Yellow - right click - palm upwards
 - Purple - middle click - backhand upwards
 Up is relative HMD up.
+
+# Grabbing
+
+Simply grab to move screens and the keyboard. Scroll and grab for extra effect, depends on the pointer mode:
+
+- Blue pointer: move on the forward axis (close / far)
+- Yellow pointer: change size
 
 # Keyboard
 
