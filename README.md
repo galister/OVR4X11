@@ -40,6 +40,13 @@ The following libraries are needed:
 - open the `Overlay` scene from inside the cloned folder
 - launch SteamVR & press play
 
+# SteamVR bindings:
+- `Click`: keyboard typing and clicking on the screen. set this to your triggers.
+- `Grip`: for moving overlays. Recommended: `Grip` input with pressure mode, pressure 70%. Release pressure 50%
+- `AltClick`: not used right now
+- `Pose`: set this to the controller tip.
+- `Scroll`: set this to your joystick, and choose non-discrete mode.
+
 # Pointer
 
 The pointer changes mode depending on the orientation:
@@ -71,13 +78,6 @@ The color of the pointer that has remained on the keyboard the longest will dete
 # Customization
 
 You can play around in the scene by changing GameObject positions and parents. The size of an overlay comes from its `width` property.
-
-## SteamVR bindings:
-- Click: keyboard typing and clicking on the screen. set this to your triggers.
-- Grip: for moving overlays. Recommended: `Grip` input with pressure mode, pressure 70%. Release pressure 50%
-- AltClick: not used right now
-- Pose: set this to the controller tip.
-- Scroll: set this to your joystick, and choose non-discrete mode.
 
 ## Watch
 
