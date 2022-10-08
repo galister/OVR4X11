@@ -287,14 +287,18 @@ namespace EasyOverlay.X11Keyboard
 
         private void OnModifierPressed(int keycode)
         {
-            if (modifiers.Contains(keycode))
-                modifiers.Remove(keycode);
-            else
-                modifiers.Add(keycode);
+            XScreenCapture.SendKey(keycode, true);
         }
 
         private void OnModifierReleased(int keycode)
         {
+            XScreenCapture.SendKey(keycode, false);
+            
+            if (modifiers.Contains(keycode))
+                modifiers.Remove(keycode);
+            else
+                modifiers.Add(keycode);
+            
             var state = modifiers.Contains(keycode);
             foreach (var layer in modifierLayerMap)
                 layer.SetButtonStatus(keycode, state);

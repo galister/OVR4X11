@@ -39,7 +39,6 @@ namespace EasyOverlay.X11Keyboard
             exec_commands = new Dictionary<string, string[]>
             {
                 ["EXEC1"] = new [] {"whisper_stt", "--lang", "en"},
-                ["EXEC2"] = new [] {"whisper_stt", "--lang", "jp"}
             };
 
             macros = new Dictionary<string, string>
