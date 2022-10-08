@@ -101,6 +101,7 @@ Supported macro commands:
 - `Keyname DOWN`
 - `Keyname UP`
 - `Keyname` (short for DOWN and then UP)
+
 Inside macros, separate individual commands using `;`
 
 # Known Issues
