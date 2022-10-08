@@ -43,7 +43,7 @@ namespace EasyOverlay.X11Keyboard
 
             macros = new Dictionary<string, string>
             {
-                ["KILL"] = "Super_L DOWN, Control_L DOWN, Escape, Control_L UP, Super_L UP"
+                ["KILL"] = "Super_L DOWN; Control_L DOWN; Escape; Control_L UP; Super_L UP"
             };
 
             labels = new Dictionary<string, string>
