@@ -46,6 +46,7 @@ The pointer changes mode depending on the orientation:
 - Blue - left click - thumb upwards
 - Yellow - right click - palm upwards
 - Purple - middle click - backhand upwards
+- 
 Up is relative HMD up.
 
 # Grabbing
