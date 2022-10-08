@@ -106,4 +106,4 @@ Inside macros, separate individual commands using `;`
 
 - Grabbing windows that are overlapping and have the same Z distance is wonky. Just release and grab in a spot where they don't overlap.
 - Battery indicator randomly shows 0%.
-- Will crash the Unity player if stopping from playmode. Disable the OverlayManager gameobject before pressing stop.
+- Will crash the Unity editor if stopping from playmode. Disable the OverlayManager gameobject before pressing stop.
