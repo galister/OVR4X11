@@ -28,7 +28,7 @@ The following libraries are needed:
   - OpenVR tab: App type: Overlay
   
 - Import https://github.com/ValveSoftware/steamvr_unity_plugin/releases/tag/2.7.3
-- Due to a bug, the Unity XR plugin loader will not work until you manually link the libraries. In the Unity project's main folder (where Assets is):
+- Due to a bug, the Unity XR plugin loader will not work on Linux, until you manually link the libraries. In the Unity project's main folder (where Assets is):
   - ```
     mkdir -p lib/x64
     cd lib/x64
