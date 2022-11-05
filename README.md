@@ -4,10 +4,11 @@ This project is no longer being worked on and is in a broken state.
 
 If you need an overlay for SteamVR Linux, see [galister/X11Overlay](https://github.com/galister/X11Overlay) instead.
 
+---
 
+---
 
-
-
+---
 
 # OVR4X11
 My personal attempt at a OpenVR desktop overlay for X11 desktops.
