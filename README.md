@@ -2,7 +2,7 @@
 
 This project is no longer being worked on and is in a broken state.
 
-Please see (X11Overlay)[https://github.com/galister/X11Overlay] instead.
+If you need an overlay for SteamVR Linux, see [galister/X11Overlay](https://github.com/galister/X11Overlay) instead.
 
 
 
